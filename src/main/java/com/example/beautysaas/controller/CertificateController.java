@@ -54,7 +54,7 @@ public class CertificateController {
     }
 
     @Operation(summary = "Get Certificate Detail", description = "Retrieves a single certificate by its ID. Accessible publicly.")
-    @GetMapping("/certificates/\{id}")
+    @GetMapping("/certificates/{id}")
     public ResponseEntity<CertificateDto> getCertificateDetail(@PathVariable UUID id) {
         log.debug("Fetching certificate by ID: {}", id);
         CertificateDto certificate = certificateService.getCertificateDetail(id);
@@ -62,7 +62,7 @@ public class CertificateController {
     }
 
     @Operation(summary = "Update Certificate", description = "Allows an Admin to update an existing certificate for their parlour.")
-    @PutMapping("/admin/certificates/\{id}")
+    @PutMapping("/admin/certificates/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CertificateDto> updateCertificate(
             Principal principal,
@@ -74,7 +74,7 @@ public class CertificateController {
     }
 
     @Operation(summary = "Delete Certificate", description = "Allows an Admin to delete a certificate from their parlour.")
-    @DeleteMapping("/admin/certificates/\{id}")
+    @DeleteMapping("/admin/certificates/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCertificate(Principal principal, @PathVariable UUID id) {
         log.info("Admin {} deleting certificate {}.", principal.getName(), id);

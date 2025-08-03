@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.UUID;
 
+
 @RestController
 @RequestMapping
 @Tag(name = "Successful Student Management", description = "APIs for managing successful students")
@@ -54,7 +55,7 @@ public class SuccessfulStudentController {
     }
 
     @Operation(summary = "Get Student Detail", description = "Retrieves a single successful student by its ID. Accessible publicly.")
-    @GetMapping("/successful-students/\{id}")
+    @GetMapping("/successful-students/{id}")
     public ResponseEntity<SuccessfulStudentDto> getStudentDetail(@PathVariable UUID id) {
         log.debug("Fetching successful student by ID: {}", id);
         SuccessfulStudentDto student = successfulStudentService.getStudentDetail(id);
@@ -62,7 +63,7 @@ public class SuccessfulStudentController {
     }
 
     @Operation(summary = "Update Student", description = "Allows an Admin to update an existing successful student for their parlour.")
-    @PutMapping("/admin/successful-students/\{id}")
+    @PutMapping("/admin/successful-students/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SuccessfulStudentDto> updateSuccessfulStudent(
             Principal principal,
@@ -74,7 +75,7 @@ public class SuccessfulStudentController {
     }
 
     @Operation(summary = "Delete Student", description = "Allows an Admin to delete a successful student from their parlour.")
-    @DeleteMapping("/admin/successful-students/\{id}")
+    @DeleteMapping("/admin/successful-students/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteSuccessfulStudent(Principal principal, @PathVariable UUID id) {
         log.info("Admin {} deleting successful student {}.", principal.getName(), id);

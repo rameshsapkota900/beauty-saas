@@ -54,7 +54,7 @@ public class ServiceController {
     }
 
     @Operation(summary = "Get Service Detail", description = "Retrieves a single service by its ID. Accessible publicly.")
-    @GetMapping("/services/\{id}")
+    @GetMapping("/services/{id}")
     public ResponseEntity<ServiceDto> getServiceDetail(@PathVariable UUID id) {
         log.debug("Fetching service by ID: {}", id);
         ServiceDto service = serviceService.getServiceDetail(id);
@@ -62,7 +62,7 @@ public class ServiceController {
     }
 
     @Operation(summary = "Update Service", description = "Allows an Admin to update an existing service for their parlour.")
-    @PutMapping("/admin/services/\{id}")
+    @PutMapping("/admin/services/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ServiceDto> updateService(
             Principal principal,
@@ -74,7 +74,7 @@ public class ServiceController {
     }
 
     @Operation(summary = "Delete Service", description = "Allows an Admin to delete a service from their parlour.")
-    @DeleteMapping("/admin/services/\{id}")
+    @DeleteMapping("/admin/services/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteService(Principal principal, @PathVariable UUID id) {
         log.info("Admin {} deleting service {}.", principal.getName(), id);

@@ -62,7 +62,7 @@ public class CustomerAuthController {
     @Operation(summary = "Update Customer Profile", description = "Updates the authenticated Customer's profile information.")
     @PatchMapping("/customer/profile")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<UserDto> updateCustomerProfile(Principal principal, @Valid @RequestBody UserProfileUpdateRequest updateRequest) \{
+    public ResponseEntity<UserDto> updateCustomerProfile(Principal principal, @Valid @RequestBody UserProfileUpdateRequest updateRequest) {
         log.info("Updating customer profile for user: {}", principal.getName());
         UserDto updatedUser = userService.updateUserProfile(principal.getName(), updateRequest);
         log.info("Customer profile updated for user: {}", principal.getName());

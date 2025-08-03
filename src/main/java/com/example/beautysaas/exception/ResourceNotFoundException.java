@@ -18,11 +18,11 @@ public class ResourceNotFoundException extends RuntimeException {
 
     public String getResourceName() {
         return resourceName;
-    \}
+    }
 
     public String getFieldName() {
         return fieldName;
-    \}
+    }
 
     public Object getFieldValue() {
         return fieldValue;

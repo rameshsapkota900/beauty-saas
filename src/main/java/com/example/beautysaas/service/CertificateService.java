@@ -30,7 +30,7 @@ public class CertificateService {
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
 
-    public CertificateService(CertificateRepository certificateRepository, ParlourRepository parlourRepository, UserRepository userRepository, ModelMapper modelMapper) \{
+    public CertificateService(CertificateRepository certificateRepository, ParlourRepository parlourRepository, UserRepository userRepository, ModelMapper modelMapper) {
         this.certificateRepository = certificateRepository;
         this.parlourRepository = parlourRepository;
         this.userRepository = userRepository;

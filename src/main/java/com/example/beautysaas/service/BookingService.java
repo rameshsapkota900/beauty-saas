@@ -5,7 +5,6 @@ import com.example.beautysaas.dto.booking.BookingDto;
 import com.example.beautysaas.entity.Booking;
 import com.example.beautysaas.entity.Course;
 import com.example.beautysaas.entity.Parlour;
-import com.example.beautysaas.entity.Service;
 import com.example.beautysaas.entity.Staff;
 import com.example.beautysaas.entity.User;
 import com.example.beautysaas.exception.BeautySaasApiException;
@@ -67,7 +66,7 @@ public class BookingService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", customerEmail));
         Parlour parlour = parlourRepository.findById(parlourId)
                 .orElseThrow(() -> new ResourceNotFoundException("Parlour", "id", parlourId));
-        Service service = serviceRepository.findById(createRequest.getItemId())
+        com.example.beautysaas.entity.Service service = serviceRepository.findById(createRequest.getItemId())
                 .orElseThrow(() -> new ResourceNotFoundException("Service", "id", createRequest.getItemId()));
 
         if (!service.getParlour().getId().equals(parlourId)) {

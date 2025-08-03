@@ -54,15 +54,15 @@ public class CategoryController {
     }
 
     @Operation(summary = "Get Category by ID", description = "Retrieves a single category by its ID. Accessible publicly.")
-    @GetMapping("/categories/\{id}")
-    public ResponseEntity<CategoryDto> getCategoryById(@PathVariable UUID id) \{
+    @GetMapping("/categories/{id}")
+    public ResponseEntity<CategoryDto> getCategoryById(@PathVariable UUID id) {
         log.debug("Fetching category by ID: {}", id);
         CategoryDto category = categoryService.getCategoryById(id);
         return ResponseEntity.ok(category);
     }
 
     @Operation(summary = "Update Category", description = "Allows an Admin to update an existing category for their parlour.")
-    @PutMapping("/admin/categories/\{id}")
+    @PutMapping("/admin/categories/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoryDto> updateCategory(
             Principal principal,
@@ -74,7 +74,7 @@ public class CategoryController {
     }
 
     @Operation(summary = "Delete Category", description = "Allows an Admin to delete a category from their parlour.")
-    @DeleteMapping("/admin/categories/\{id}")
+    @DeleteMapping("/admin/categories/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCategory(Principal principal, @PathVariable UUID id) {
         log.info("Admin {} deleting category {}.", principal.getName(), id);

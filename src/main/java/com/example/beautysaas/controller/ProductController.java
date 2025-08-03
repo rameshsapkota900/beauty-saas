@@ -54,7 +54,7 @@ public class ProductController {
     }
 
     @Operation(summary = "Get Product Detail", description = "Retrieves a single product by its ID. Accessible publicly.")
-    @GetMapping("/products/\{id}")
+    @GetMapping("/products/{id}")
     public ResponseEntity<ProductDto> getProductDetail(@PathVariable UUID id) {
         log.debug("Fetching product by ID: {}", id);
         ProductDto product = productService.getProductDetail(id);
@@ -62,7 +62,7 @@ public class ProductController {
     }
 
     @Operation(summary = "Update Product", description = "Allows an Admin to update an existing product for their parlour.")
-    @PutMapping("/admin/products/\{id}")
+    @PutMapping("/admin/products/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDto> updateProduct(
             Principal principal,
@@ -74,7 +74,7 @@ public class ProductController {
     }
 
     @Operation(summary = "Delete Product", description = "Allows an Admin to delete a product from their parlour.")
-    @DeleteMapping("/admin/products/\{id}")
+    @DeleteMapping("/admin/products/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProduct(Principal principal, @PathVariable UUID id) {
         log.info("Admin {} deleting product {}.", principal.getName(), id);

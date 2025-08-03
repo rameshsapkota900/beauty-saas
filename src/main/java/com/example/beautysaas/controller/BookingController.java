@@ -92,19 +92,19 @@ public class BookingController {
     }
 
     @Operation(summary = "Admin Update Service Booking Status", description = "Allows an Admin to update the status of a service booking.")
-    @PatchMapping("/admin/bookings/services/\{id}/status")
+    @PatchMapping("/admin/bookings/services/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookingDto> adminUpdateServiceBookingStatus(
             Principal principal,
             @PathVariable UUID id,
-            @Parameter(description = "New status (e.g., CONFIRMED, REJECTED, COMPLETED, CANCELED)", required = true) @RequestParam String status) \{
+            @Parameter(description = "New status (e.g., CONFIRMED, REJECTED, COMPLETED, CANCELED)", required = true) @RequestParam String status) {
         log.info("Admin {} updating status of service booking {}.", principal.getName(), id);
         BookingDto updatedBooking = bookingService.updateBookingStatus(principal.getName(), id, status);
         return ResponseEntity.ok(updatedBooking);
     }
 
     @Operation(summary = "Admin Update Course Booking Status", description = "Allows an Admin to update the status of a course booking.")
-    @PatchMapping("/admin/bookings/courses/\{id}/status")
+    @PatchMapping("/admin/bookings/courses/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookingDto> adminUpdateCourseBookingStatus(
             Principal principal,
@@ -116,7 +116,7 @@ public class BookingController {
     }
 
     @Operation(summary = "Customer Cancels Service Booking", description = "Allows a customer to cancel their own service booking.")
-    @DeleteMapping("/bookings/services/\{id}")
+    @DeleteMapping("/bookings/services/{id}")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<Void> customerCancelsServiceBooking(Principal principal, @PathVariable UUID id) {
         log.info("Customer {} canceling service booking {}.", principal.getName(), id);
@@ -125,7 +125,7 @@ public class BookingController {
     }
 
     @Operation(summary = "Customer Cancels Course Booking", description = "Allows a customer to cancel their own course booking.")
-    @DeleteMapping("/bookings/courses/\{id}")
+    @DeleteMapping("/bookings/courses/{id}")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<Void> customerCancelsCourseBooking(Principal principal, @PathVariable UUID id) {
         log.info("Customer {} canceling course booking {}.", principal.getName(), id);

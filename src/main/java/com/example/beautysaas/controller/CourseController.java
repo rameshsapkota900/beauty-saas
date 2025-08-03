@@ -54,7 +54,7 @@ public class CourseController {
     }
 
     @Operation(summary = "Get Course Detail", description = "Retrieves a single course by its ID. Accessible publicly.")
-    @GetMapping("/courses/\{id}")
+    @GetMapping("/courses/{id}")
     public ResponseEntity<CourseDto> getCourseDetail(@PathVariable UUID id){
         log.debug("Fetching course by ID: {}", id);
         CourseDto course = courseService.getCourseDetail(id);
@@ -62,7 +62,7 @@ public class CourseController {
     }
 
     @Operation(summary = "Update Course", description = "Allows an Admin to update an existing course for their parlour.")
-    @PutMapping("/admin/courses/\{id}")
+    @PutMapping("/admin/courses/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CourseDto> updateCourse(
             Principal principal,
@@ -74,7 +74,7 @@ public class CourseController {
     }
 
     @Operation(summary = "Delete Course", description = "Allows an Admin to delete a course from their parlour.")
-    @DeleteMapping("/admin/courses/\{id}")
+    @DeleteMapping("/admin/courses/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCourse(Principal principal, @PathVariable UUID id) {
         log.info("Admin {} deleting course {}.", principal.getName(), id);

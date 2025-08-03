@@ -59,7 +59,7 @@ public class StaffController {
     }
 
     @Operation(summary = "Get Staff Detail", description = "Retrieves a single staff member by ID for an Admin's parlour.")
-    @GetMapping("/\{id}")
+    @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<StaffDto> getStaffDetail(Principal principal, @PathVariable UUID id) {
         log.debug("Admin {} fetching staff by ID: {}", principal.getName(), id);
@@ -68,7 +68,7 @@ public class StaffController {
     }
 
     @Operation(summary = "Update Staff", description = "Allows an Admin to update an existing staff member for their parlour.")
-    @PutMapping("/\{id}")
+    @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<StaffDto> updateStaff(
             Principal principal,
@@ -80,7 +80,7 @@ public class StaffController {
     }
 
     @Operation(summary = "Delete Staff", description = "Allows an Admin to delete a staff member from their parlour.")
-    @DeleteMapping("/\{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteStaff(Principal principal, @PathVariable UUID id) {
         log.info("Admin {} deleting staff {}.", principal.getName(), id);
@@ -89,7 +89,7 @@ public class StaffController {
     }
 
     @Operation(summary = "Add Advance Payment", description = "Allows an Admin to record an advance payment for a staff member.")
-    @PostMapping("/\{id}/advance")
+    @PostMapping("/{id}/advance")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AdvancePaymentDto> addAdvancePayment(
             Principal principal,
@@ -101,7 +101,7 @@ public class StaffController {
     }
 
     @Operation(summary = "Calculate & Record Salary", description = "Allows an Admin to calculate and record salary for a staff member for a given month/year.")
-    @PostMapping("/\{id}/salary")
+    @PostMapping("/{id}/salary")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SalaryLogDto> calculateAndRecordSalary(
             Principal principal,
@@ -114,7 +114,7 @@ public class StaffController {
     }
 
     @Operation(summary = "Get Salary Logs", description = "Retrieves a paginated list of salary logs for a staff member.")
-    @GetMapping("/\{id}/salary-log")
+    @GetMapping("/{id}/salary-log")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<SalaryLogDto>> getSalaryLogs(
             Principal principal,

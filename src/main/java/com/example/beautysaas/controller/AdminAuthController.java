@@ -31,7 +31,7 @@ public class AdminAuthController {
     }
 
     @Operation(summary = "Admin Secret Login", description = "Admin login via a secret URL endpoint using parlour slug.")
-    @PostMapping("/admin-login/\{parlourSlug}")
+    @PostMapping("/admin-login/{parlourSlug}")
     public ResponseEntity<JwtAuthResponse> adminSecretLogin(@PathVariable String parlourSlug, @Valid @RequestBody LoginRequest loginRequest) {
         log.info("Attempting admin secret login for parlour slug: {} with email: {}", parlourSlug, loginRequest.getEmail());
         JwtAuthResponse response = authService.adminLogin(parlourSlug, loginRequest);

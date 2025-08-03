@@ -48,7 +48,7 @@ public class SuperAdminController {
     }
 
     @Operation(summary = "Update Parlour information", description = "Allows SuperAdmin to update an existing parlour's information.")
-    @PatchMapping("/\{id}")
+    @PatchMapping("/{id}")
     @PreAuthorize("hasRole('SUPERADMIN')")
     public ResponseEntity<ParlourDto> updateParlour(@PathVariable UUID id, @Valid @RequestBody ParlourUpdateRequest updateRequest) {
         log.info("SuperAdmin updating parlour {}.", id);
@@ -57,7 +57,7 @@ public class SuperAdminController {
     }
 
     @Operation(summary = "Delete Parlour", description = "Allows SuperAdmin to delete a parlour and its associated Admin user.")
-    @DeleteMapping("/\{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('SUPERADMIN')")
     public ResponseEntity<Void> deleteParlour(@PathVariable UUID id) {
         log.info("SuperAdmin deleting parlour {}.", id);
