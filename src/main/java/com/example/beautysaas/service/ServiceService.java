@@ -6,7 +6,6 @@ import com.example.beautysaas.dto.service.ServiceUpdateRequest;
 import com.example.beautysaas.entity.Category;
 import com.example.beautysaas.entity.Parlour;
 import com.example.beautysaas.entity.Role;
-import com.example.beautysaas.entity.Service;
 import com.example.beautysaas.entity.User;
 import com.example.beautysaas.exception.BeautySaasApiException;
 import com.example.beautysaas.exception.ResourceNotFoundException;
@@ -65,7 +64,7 @@ public class ServiceService {
             throw new BeautySaasApiException(HttpStatus.BAD_REQUEST, "Available end time must be after start time.");
         }
 
-        Service service = Service.builder()
+        com.example.beautysaas.entity.Service service = com.example.beautysaas.entity.Service.builder()
                 .parlour(parlour)
                 .name(createRequest.getName())
                 .description(createRequest.getDescription())
@@ -77,18 +76,18 @@ public class ServiceService {
                 .availableEndTime(createRequest.getAvailableEndTime())
                 .build();
 
-        Service savedService = serviceRepository.save(service);
+        com.example.beautysaas.entity.Service savedService = serviceRepository.save(service);
         log.info("Service added: {}", savedService.getId());
         return mapToDto(savedService);
     }
 
     public Page<ServiceDto> listServices(UUID parlourId, Pageable pageable) {
-        Page<Service> services = serviceRepository.findByParlourId(parlourId, pageable);
+        Page<com.example.beautysaas.entity.Service> services = serviceRepository.findByParlourId(parlourId, pageable);
         return services.map(this::mapToDto);
     }
 
     public ServiceDto getServiceDetail(UUID id) {
-        Service service = serviceRepository.findById(id)
+        com.example.beautysaas.entity.Service service = serviceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Service", "id", id));
         return mapToDto(service);
     }
@@ -97,7 +96,7 @@ public class ServiceService {
     public ServiceDto updateService(String adminEmail, UUID id, ServiceUpdateRequest updateRequest) {
         User admin = userRepository.findByEmail(adminEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", adminEmail));
-        Service service = serviceRepository.findById(id)
+        com.example.beautysaas.entity.Service service = serviceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Service", "id", id));
 
         if (!admin.getRole().getName().equals("ADMIN") || !admin.getParlour().getId().equals(service.getParlour().getId())) {
@@ -141,7 +140,7 @@ public class ServiceService {
             throw new BeautySaasApiException(HttpStatus.BAD_REQUEST, "Available end time must be after start time.");
         }
 
-        Service updatedService = serviceRepository.save(service);
+        com.example.beautysaas.entity.Service updatedService = serviceRepository.save(service);
         log.info("Service updated: {}", updatedService.getId());
         return mapToDto(updatedService);
     }
@@ -150,7 +149,7 @@ public class ServiceService {
     public void deleteService(String adminEmail, UUID id) {
         User admin = userRepository.findByEmail(adminEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", adminEmail));
-        Service service = serviceRepository.findById(id)
+        com.example.beautysaas.entity.Service service = serviceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Service", "id", id));
 
         if (!admin.getRole().getName().equals("ADMIN") || !admin.getParlour().getId().equals(service.getParlour().getId())) {
@@ -162,7 +161,7 @@ public class ServiceService {
         log.info("Service deleted: {}", id);
     }
 
-    private ServiceDto mapToDto(Service service) {
+    private ServiceDto mapToDto(com.example.beautysaas.entity.Service service) {
         ServiceDto dto = modelMapper.map(service, ServiceDto.class);
         dto.setParlourId(service.getParlour().getId());
         dto.setCategoryName(service.getCategory().getName());

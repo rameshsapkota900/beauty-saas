@@ -14,4 +14,5 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
     Page<Course> findByParlourId(UUID parlourId, Pageable pageable);
     Optional<Course> findByParlourIdAndName(UUID parlourId, String name);
     boolean existsByParlourIdAndNameIgnoreCase(UUID parlourId, String name);
+    long countByParlourId(UUID parlourId);
 }

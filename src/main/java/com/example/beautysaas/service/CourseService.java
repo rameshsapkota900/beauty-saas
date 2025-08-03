@@ -160,6 +160,15 @@ public class CourseService {
         log.info("Course deleted: {}", id);
     }
 
+    /**
+     * Counts the number of courses associated with a specific parlour
+     * @param parlourId The UUID of the parlour
+     * @return The count of courses for the specified parlour
+     */
+    public long countCoursesByParlourId(UUID parlourId) {
+        return courseRepository.countByParlourId(parlourId);
+    }
+
     private CourseDto mapToDto(Course course) {
         CourseDto dto = modelMapper.map(course, CourseDto.class);
         dto.setParlourId(course.getParlour().getId());

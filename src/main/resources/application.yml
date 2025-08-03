@@ -1,6 +1,6 @@
 spring:
   application:
-    name: beauty-saas
+    name: beautysaas
   datasource:
     url: jdbc:postgresql://localhost:5432/beautysaas_db
     username: postgres

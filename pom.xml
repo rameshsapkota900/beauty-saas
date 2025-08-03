@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>beauty-saas</artifactId>
+    <artifactId>beautysaas</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>beauty-saas</name>
     <description>Multi-Tenant Beauty Parlour SaaS Management System</description>

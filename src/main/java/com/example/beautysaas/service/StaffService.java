@@ -224,7 +224,7 @@ public class StaffService {
 
         // Calculate total advance payments for the month
         LocalDate startDate = periodMonth;
-        LocalDate endDate = periodMonth.lengthOfMonth();
+        LocalDate endDate = periodMonth.withDayOfMonth(periodMonth.lengthOfMonth());
         BigDecimal totalAdvancePayments = advancePaymentRepository.findByStaffIdAndPaymentDateBetween(staffId, startDate, endDate)
                 .stream()
                 .map(AdvancePayment::getAmount)
