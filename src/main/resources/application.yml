@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: beauty-saas
+  datasource:
+    url: jdbc:postgresql://localhost:5432/beautysaas_db
+    username: postgres
+    password: 12345
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # Use 'update' for development, 'none' or 'validate' for production
+    show-sql: true # Set to false in production
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  # Spring Security configuration
+  security:
+    user:
+      name: admin
+      password: admin
+
+# JWT Configuration
+app:
+  jwt-secret: YourSuperSecretKeyThatIsAtLeast256BitsLongAndShouldBeStoredSecurelyInProductionEnvironment
+  app-jwt-expiration-milliseconds: 604800000 # 7 days in milliseconds (7 * 24 * 60 * 60 * 1000)
+
+# Server Port
+server:
+  port: 8080
+
+# Logging configuration
+logging:
+  level:
+    com.example.beautysaas: DEBUG # Set to INFO or WARN in production
+    org.springframework.web: INFO
+    org.hibernate: INFO
