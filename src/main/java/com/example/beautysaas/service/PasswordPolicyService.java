@@ -1,5 +1,6 @@
 package com.example.beautysaas.service;
 
+import com.example.beautysaas.dto.auth.PasswordStrengthResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -97,5 +98,86 @@ public class PasswordPolicyService {
 
         public boolean isValid() { return valid; }
         public List<String> getErrors() { return errors; }
+    }
+    
+    /**
+     * Check password strength and provide detailed feedback
+     */
+    public PasswordStrengthResponse checkPasswordStrength(String password) {
+        if (password == null) {
+            return PasswordStrengthResponse.builder()
+                    .isValid(false)
+                    .strength("VERY_WEAK")
+                    .score(0)
+                    .errors(List.of("Password cannot be null"))
+                    .suggestions(List.of("Please enter a password"))
+                    .build();
+        }
+        
+        PasswordValidationResult validation = validatePassword(password);
+        int score = calculatePasswordScore(password);
+        String strength = PasswordStrengthResponse.PasswordStrength.fromScore(score).getDisplayName();
+        
+        return PasswordStrengthResponse.builder()
+                .isValid(validation.isValid())
+                .strength(strength)
+                .score(score)
+                .errors(validation.getErrors())
+                .suggestions(generatePasswordSuggestions(password))
+                .hasUppercase(UPPERCASE_PATTERN.matcher(password).find())
+                .hasLowercase(LOWERCASE_PATTERN.matcher(password).find())
+                .hasDigits(DIGIT_PATTERN.matcher(password).find())
+                .hasSpecialChars(SPECIAL_CHAR_PATTERN.matcher(password).find())
+                .hasMinLength(password.length() >= minLength)
+                .build();
+    }
+    
+    private int calculatePasswordScore(String password) {
+        int score = 0;
+        
+        // Length bonus
+        score += Math.min(password.length() * 4, 40);
+        
+        // Character type bonuses
+        if (UPPERCASE_PATTERN.matcher(password).find()) score += 15;
+        if (LOWERCASE_PATTERN.matcher(password).find()) score += 15;
+        if (DIGIT_PATTERN.matcher(password).find()) score += 15;
+        if (SPECIAL_CHAR_PATTERN.matcher(password).find()) score += 15;
+        
+        // Complexity bonus for longer passwords
+        if (password.length() > 12) score += 10;
+        if (password.length() > 16) score += 10;
+        
+        return Math.max(0, Math.min(100, score));
+    }
+    
+    private List<String> generatePasswordSuggestions(String password) {
+        List<String> suggestions = new ArrayList<>();
+        
+        if (password.length() < minLength) {
+            suggestions.add("Increase password length to at least " + minLength + " characters");
+        }
+        
+        if (requireUppercase && !UPPERCASE_PATTERN.matcher(password).find()) {
+            suggestions.add("Add uppercase letters (A-Z)");
+        }
+        
+        if (requireLowercase && !LOWERCASE_PATTERN.matcher(password).find()) {
+            suggestions.add("Add lowercase letters (a-z)");
+        }
+        
+        if (requireDigits && !DIGIT_PATTERN.matcher(password).find()) {
+            suggestions.add("Add numbers (0-9)");
+        }
+        
+        if (requireSpecialChars && !SPECIAL_CHAR_PATTERN.matcher(password).find()) {
+            suggestions.add("Add special characters (!@#$%^&*)");
+        }
+        
+        if (password.length() < 12) {
+            suggestions.add("Consider using a longer password for better security");
+        }
+        
+        return suggestions;
     }
 }
