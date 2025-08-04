@@ -1,6 +1,5 @@
 package com.example.beautysaas.service;
 
-import com.example.beautysaas.config.SecurityConfig;
 import com.example.beautysaas.dto.parlour.ParlourCreateRequest;
 import com.example.beautysaas.dto.parlour.ParlourDto;
 import com.example.beautysaas.dto.parlour.ParlourUpdateRequest;
@@ -36,12 +35,12 @@ public class ParlourService {
     public ParlourService(ParlourRepository parlourRepository,
                           UserRepository userRepository,
                           RoleRepository roleRepository,
-                          SecurityConfig securityConfig, // Inject SecurityConfig to get passwordEncoder bean
+                          PasswordEncoder passwordEncoder,
                           ModelMapper modelMapper) {
         this.parlourRepository = parlourRepository;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.passwordEncoder = securityConfig.passwordEncoder(); // Get the PasswordEncoder bean
+        this.passwordEncoder = passwordEncoder;
         this.modelMapper = modelMapper;
     }
 

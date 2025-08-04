@@ -1,8 +1,8 @@
 package com.example.beautysaas.service;
 
-import com.example.beautysaas.config.SecurityConfig;
 import com.example.beautysaas.dto.auth.JwtAuthResponse;
 import com.example.beautysaas.dto.auth.LoginRequest;
+import com.example.beautysaas.dto.auth.PasswordChangeRequest;
 import com.example.beautysaas.dto.auth.RegisterRequest;
 import com.example.beautysaas.entity.Parlour;
 import com.example.beautysaas.entity.Role;
@@ -42,7 +42,7 @@ public class AuthService {
 
     public AuthService(UserRepository userRepository,
                        RoleRepository roleRepository,
-                       SecurityConfig securityConfig,
+                       PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager,
                        JwtTokenProvider jwtTokenProvider,
                        ParlourRepository parlourRepository,
@@ -50,7 +50,7 @@ public class AuthService {
                        PasswordPolicyService passwordPolicyService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.passwordEncoder = securityConfig.passwordEncoder();
+        this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
         this.parlourRepository = parlourRepository;
@@ -245,6 +245,52 @@ public class AuthService {
             log.error("Authentication failed for super admin: {}", e.getMessage());
             throw new BeautySaasApiException(HttpStatus.UNAUTHORIZED, "Invalid super admin credentials");
         }
+    }
+
+    /**
+     * Change user password with validation
+     */
+    @Transactional
+    public void changePassword(String email, PasswordChangeRequest passwordChangeRequest, HttpServletRequest request) {
+        String ipAddress = getClientIpAddress(request);
+        String userAgent = request.getHeader("User-Agent");
+
+        // Validate new password matches confirmation
+        if (!passwordChangeRequest.getNewPassword().equals(passwordChangeRequest.getConfirmPassword())) {
+            securityService.logSecurityEvent(email, "PASSWORD_CHANGE_FAILED", ipAddress, userAgent,
+                    "Password confirmation mismatch", false);
+            throw new BeautySaasApiException(HttpStatus.BAD_REQUEST, "New password and confirmation do not match");
+        }
+
+        // Validate new password policy
+        PasswordPolicyService.PasswordValidationResult validation =
+                passwordPolicyService.validatePassword(passwordChangeRequest.getNewPassword());
+
+        if (!validation.isValid()) {
+            securityService.logSecurityEvent(email, "PASSWORD_CHANGE_FAILED", ipAddress, userAgent,
+                    "Password policy violation: " + String.join(", ", validation.getErrors()), false);
+            throw new BeautySaasApiException(HttpStatus.BAD_REQUEST,
+                    "New password does not meet policy requirements: " + String.join(", ", validation.getErrors()));
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+
+        // Verify current password
+        if (!passwordEncoder.matches(passwordChangeRequest.getCurrentPassword(), user.getPassword())) {
+            securityService.recordFailedLoginAttempt(email, ipAddress, userAgent);
+            throw new BeautySaasApiException(HttpStatus.UNAUTHORIZED, "Current password is incorrect");
+        }
+
+        // Update password
+        user.setPassword(passwordEncoder.encode(passwordChangeRequest.getNewPassword()));
+        userRepository.save(user);
+
+        // Log successful password change
+        securityService.logSecurityEvent(email, "PASSWORD_CHANGED", ipAddress, userAgent,
+                "Password changed successfully", true);
+
+        log.info("Password changed successfully for user: {}", email);
     }
 
     private String getClientIpAddress(HttpServletRequest request) {
