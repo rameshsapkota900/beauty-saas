@@ -21,7 +21,7 @@ public class DataInitializer implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
+    
     // Constants for role names - using constants helps maintain consistency
     public static final String ROLE_SUPER_ADMIN = "ROLE_SUPER_ADMIN";
     public static final String ROLE_ADMIN = "ROLE_ADMIN";
@@ -43,14 +43,14 @@ public class DataInitializer implements CommandLineRunner {
             roleRepository.save(superAdminRole);
             log.info("Role created: {}", ROLE_SUPER_ADMIN);
         }
-
+        
         // Create Admin role if it doesn't exist
         if (roleRepository.findByName(ROLE_ADMIN).isEmpty()) {
             Role adminRole = Role.builder().name(ROLE_ADMIN).build();
             roleRepository.save(adminRole);
             log.info("Role created: {}", ROLE_ADMIN);
         }
-
+        
         // Create Customer role if it doesn't exist
         if (roleRepository.findByName(ROLE_CUSTOMER).isEmpty()) {
             Role customerRole = Role.builder().name(ROLE_CUSTOMER).build();
@@ -64,7 +64,7 @@ public class DataInitializer implements CommandLineRunner {
         if (userRepository.findByEmail("superadmin@beautysaas.com").isEmpty()) {
             Role superAdminRole = roleRepository.findByName(ROLE_SUPER_ADMIN)
                     .orElseThrow(() -> new RuntimeException("Super Admin role not found"));
-
+                    
             User superAdmin = User.builder()
                     .name("Super Admin")
                     .email("superadmin@beautysaas.com")
@@ -72,7 +72,7 @@ public class DataInitializer implements CommandLineRunner {
                     .role(superAdminRole)
                     .createdAt(LocalDateTime.now())
                     .build();
-
+                    
             userRepository.save(superAdmin);
             log.info("Super Admin user created with email: superadmin@beautysaas.com");
         } else {

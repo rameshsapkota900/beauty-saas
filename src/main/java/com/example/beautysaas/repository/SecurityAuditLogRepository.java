@@ -12,15 +12,15 @@ import java.util.UUID;
 
 @Repository
 public interface SecurityAuditLogRepository extends JpaRepository<SecurityAuditLog, UUID> {
-
+    
     List<SecurityAuditLog> findByEmailOrderByCreatedAtDesc(String email);
-
+    
     @Query("SELECT s FROM SecurityAuditLog s WHERE s.email = :email AND s.createdAt >= :since")
     List<SecurityAuditLog> findByEmailAndCreatedAtAfter(@Param("email") String email, @Param("since") LocalDateTime since);
-
+    
     @Query("SELECT s FROM SecurityAuditLog s WHERE s.eventType = :eventType AND s.createdAt >= :since")
     List<SecurityAuditLog> findByEventTypeAndCreatedAtAfter(@Param("eventType") String eventType, @Param("since") LocalDateTime since);
-
+    
     @Query("SELECT COUNT(s) FROM SecurityAuditLog s WHERE s.email = :email AND s.eventType = 'LOGIN_FAILURE' AND s.createdAt >= :since")
     Long countFailedLoginAttempts(@Param("email") String email, @Param("since") LocalDateTime since);
 }

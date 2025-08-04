@@ -30,7 +30,7 @@ public class SecurityMaintenanceService {
      */
     @Scheduled(cron = "0 0 * * * *") // Every hour
     public void logSecurityMaintenance() {
-        securityService.logSecurityEvent("SYSTEM", "SECURITY_MAINTENANCE",
+        securityService.logSecurityEvent("SYSTEM", "SECURITY_MAINTENANCE", 
             null, null, "Scheduled security maintenance completed", true);
     }
 }

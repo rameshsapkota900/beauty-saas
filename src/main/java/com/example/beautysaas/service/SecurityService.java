@@ -56,11 +56,11 @@ public class SecurityService {
         if (lockout.getFailedAttempts() >= maxFailedAttempts) {
             lockout.setIsLocked(true);
             lockout.setLockedUntil(LocalDateTime.now().plusMinutes(lockoutDurationMinutes));
-
+            
             // Log account lockout event
-            logSecurityEvent(email, "ACCOUNT_LOCKED", ipAddress, userAgent,
+            logSecurityEvent(email, "ACCOUNT_LOCKED", ipAddress, userAgent, 
                     "Account locked due to " + maxFailedAttempts + " failed attempts", false);
-
+            
             log.warn("Account locked for email: {} due to {} failed attempts", email, lockout.getFailedAttempts());
         }
 
@@ -90,7 +90,7 @@ public class SecurityService {
                 .details("Successful login")
                 .success(true)
                 .build();
-
+        
         securityAuditLogRepository.save(auditLog);
         log.info("Successful login recorded for email: {}", email);
     }
@@ -107,7 +107,7 @@ public class SecurityService {
                 .details(details)
                 .success(success)
                 .build();
-
+        
         securityAuditLogRepository.save(auditLog);
         log.info("Security event logged: {} for email: {}", eventType, email);
     }
@@ -118,7 +118,7 @@ public class SecurityService {
     @Transactional
     public void unlockAccount(String email, String adminEmail) {
         accountLockoutRepository.unlockAccount(email);
-        logSecurityEvent(email, "ACCOUNT_UNLOCKED", null, null,
+        logSecurityEvent(email, "ACCOUNT_UNLOCKED", null, null, 
                 "Account manually unlocked by admin: " + adminEmail, true);
         log.info("Account unlocked for email: {} by admin: {}", email, adminEmail);
     }

@@ -69,16 +69,16 @@ public class PasswordPolicyService {
         if (password == null) return 0;
 
         int score = 0;
-
+        
         // Length score (up to 25 points)
         score += Math.min(password.length() * 2, 25);
-
+        
         // Character variety (up to 75 points)
         if (UPPERCASE_PATTERN.matcher(password).find()) score += 15;
         if (LOWERCASE_PATTERN.matcher(password).find()) score += 15;
         if (DIGIT_PATTERN.matcher(password).find()) score += 15;
         if (SPECIAL_CHAR_PATTERN.matcher(password).find()) score += 15;
-
+        
         // Length bonus for very long passwords
         if (password.length() >= 12) score += 10;
         if (password.length() >= 16) score += 5;
