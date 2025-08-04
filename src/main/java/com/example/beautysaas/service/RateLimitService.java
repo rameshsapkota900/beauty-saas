@@ -80,4 +80,13 @@ public class RateLimitService {
         windowStartTimes.remove(clientId);
         log.info("Rate limit reset for client: {}", clientId);
     }
+    
+    /**
+     * Get all currently tracked client IDs (for admin/debugging)
+     */
+    public java.util.Set<String> getTrackedClients() {
+        java.util.Set<String> clients = new java.util.HashSet<>(requestCounts.keySet());
+        clients.addAll(windowStartTimes.keySet());
+        return clients;
+    }
 }
