@@ -71,4 +71,13 @@ public class RateLimitService {
         requestCounts.entrySet().removeIf(entry -> 
             !windowStartTimes.containsKey(entry.getKey()));
     }
+    
+    /**
+     * Reset rate limit counters for a specific client (useful for admin actions or testing)
+     */
+    public void resetRateLimit(String clientId) {
+        requestCounts.remove(clientId);
+        windowStartTimes.remove(clientId);
+        log.info("Rate limit reset for client: {}", clientId);
+    }
 }
