@@ -2,7 +2,6 @@ package com.example.beautysaas.controller;
 
 import com.example.beautysaas.dto.auth.JwtAuthResponse;
 import com.example.beautysaas.dto.auth.LoginRequest;
-import com.example.beautysaas.dto.auth.PasswordChangeRequest;
 import com.example.beautysaas.dto.auth.RegisterRequest;
 import com.example.beautysaas.dto.user.UserProfileUpdateRequest;
 import com.example.beautysaas.dto.user.UserDto;
@@ -69,14 +68,5 @@ public class CustomerAuthController {
         UserDto updatedUser = userService.updateUserProfile(principal.getName(), updateRequest);
         log.info("Customer profile updated for user: {}", principal.getName());
         return ResponseEntity.ok(updatedUser);
-    }
-
-    @Operation(summary = "Change Customer Password", description = "Allows customers to change their password with validation.")
-    @PostMapping("/customer/change-password")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<String> changePassword(Principal principal, @Valid @RequestBody PasswordChangeRequest passwordChangeRequest, HttpServletRequest request) {
-        log.info("Customer {} requesting password change", principal.getName());
-        authService.changePassword(principal.getName(), passwordChangeRequest, request);
-        return ResponseEntity.ok("Password changed successfully");
     }
 }
