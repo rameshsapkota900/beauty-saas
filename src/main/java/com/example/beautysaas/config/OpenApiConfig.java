@@ -13,14 +13,16 @@ import org.springframework.context.annotation.Configuration;
 @OpenAPIDefinition(
         info = @Info(
                 title = "Beauty Parlour SaaS API",
-                version = "1.0",
-                description = "API documentation for the Multi-Tenant Beauty Parlour SaaS Management System",
-                contact = @Contact(name = "Vercel AI", email = "support@vercel.com"),
-                license = @License(name = "Apache 2.0", url = "http://www.apache.org/licenses/LICENSE-2.0.html")
+                version = "2.0.0",
+                description = "Comprehensive API documentation for the Multi-Tenant Beauty Parlour SaaS Management System with advanced security and features",
+                contact = @Contact(name = "Beauty SaaS Support", email = "support@beautysaas.com", url = "https://beautysaas.com/support"),
+                license = @License(name = "MIT License", url = "https://opensource.org/licenses/MIT"),
+                termsOfService = "https://beautysaas.com/terms"
         ),
         servers = {
                 @Server(url = "http://localhost:8080", description = "Local Development Server"),
-                @Server(url = "https://your-production-url.com", description = "Production Server")
+                @Server(url = "https://api.beautysaas.com", description = "Production Server"),
+                @Server(url = "https://staging-api.beautysaas.com", description = "Staging Server")
         }
 )
 @SecurityScheme(
