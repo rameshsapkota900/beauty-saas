@@ -37,16 +37,22 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(authenticationEntryPoint))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        .maximumSessions(3)
+                        .maxSessionsPreventsLogin(false))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/admin-login/**").permitAll()
+                        .requestMatchers("/superadmin-login/**").permitAll() // Added missing super admin endpoint
                         .requestMatchers("/categories/**").permitAll()
                         .requestMatchers("/services/**").permitAll()
                         .requestMatchers("/courses/**").permitAll()
                         .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/certificates/**").permitAll()
                         .requestMatchers("/successful-students/**").permitAll()
+                        .requestMatchers("/security/unlock-account/**").hasRole("SUPER_ADMIN") // Security admin endpoints
+                        .requestMatchers("/security/audit-logs/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                         .anyRequest().authenticated()
                 );

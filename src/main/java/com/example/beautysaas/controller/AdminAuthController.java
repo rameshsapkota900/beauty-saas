@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
 
 @RestController
@@ -30,11 +31,11 @@ public class AdminAuthController {
         this.userService = userService;
     }
 
-    @Operation(summary = "Admin Secret Login", description = "Admin login via a secret URL endpoint using parlour slug.")
+    @Operation(summary = "Admin Secret Login", description = "Admin login with account lockout protection and audit logging.")
     @PostMapping("/admin-login/{parlourSlug}")
-    public ResponseEntity<JwtAuthResponse> adminSecretLogin(@PathVariable String parlourSlug, @Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<JwtAuthResponse> adminSecretLogin(@PathVariable String parlourSlug, @Valid @RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         log.info("Attempting admin secret login for parlour slug: {} with email: {}", parlourSlug, loginRequest.getEmail());
-        JwtAuthResponse response = authService.adminLogin(parlourSlug, loginRequest);
+        JwtAuthResponse response = authService.adminLogin(parlourSlug, loginRequest, request);
         log.info("Admin secret login successful for parlour slug: {}", parlourSlug);
         return ResponseEntity.ok(response);
     }
@@ -56,5 +57,14 @@ public class AdminAuthController {
         UserDto updatedUser = userService.updateUserProfile(principal.getName(), updateRequest);
         log.info("Admin profile updated for user: {}", principal.getName());
         return ResponseEntity.ok(updatedUser);
+    }
+
+    @Operation(summary = "Super Admin Login", description = "Authentication endpoint for Super Admin users with full security protection.")
+    @PostMapping("/superadmin-login")
+    public ResponseEntity<JwtAuthResponse> superAdminLogin(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+        log.info("Attempting super admin login for email: {}", loginRequest.getEmail());
+        JwtAuthResponse response = authService.superAdminLogin(loginRequest, request);
+        log.info("Super admin login successful");
+        return ResponseEntity.ok(response);
     }
 }

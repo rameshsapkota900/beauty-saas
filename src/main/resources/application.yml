@@ -23,7 +23,22 @@ spring:
 # JWT Configuration
 app:
   jwt-secret: YourSuperSecretKeyThatIsAtLeast256BitsLongAndShouldBeStoredSecurelyInProductionEnvironment
-  app-jwt-expiration-milliseconds: 604800000 # 7 days in milliseconds (7 * 24 * 60 * 60 * 1000)
+  jwt-expiration-milliseconds: 604800000 # 7 days in milliseconds (7 * 24 * 60 * 60 * 1000)
+
+# Security Configuration
+security:
+  account-lockout:
+    max-attempts: 5
+    lockout-duration-minutes: 30
+  password:
+    min-length: 8
+    require-uppercase: true
+    require-lowercase: true
+    require-digits: true
+    require-special-chars: true
+  session:
+    max-concurrent-sessions: 3
+    prevent-session-fixation: true
 
 # Server Port
 server:

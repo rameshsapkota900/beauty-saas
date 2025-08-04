@@ -17,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/auth")
@@ -32,20 +33,20 @@ public class CustomerAuthController {
         this.userService = userService;
     }
 
-    @Operation(summary = "Customer Registration", description = "Registers a new customer account.")
+    @Operation(summary = "Customer Registration", description = "Registers a new customer account with password policy validation.")
     @PostMapping("/register")
-    public ResponseEntity<String> registerCustomer(@Valid @RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<String> registerCustomer(@Valid @RequestBody RegisterRequest registerRequest, HttpServletRequest request) {
         log.info("Attempting customer registration for email: {}", registerRequest.getEmail());
-        authService.registerCustomer(registerRequest);
+        authService.registerCustomer(registerRequest, request);
         log.info("Customer registered successfully: {}", registerRequest.getEmail());
         return new ResponseEntity<>("Customer registered successfully!", HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Customer Login", description = "Authenticates a customer and returns a JWT token.")
+    @Operation(summary = "Customer Login", description = "Authenticates a customer with account lockout protection and audit logging.")
     @PostMapping("/login")
-    public ResponseEntity<JwtAuthResponse> customerLogin(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<JwtAuthResponse> customerLogin(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         log.info("Attempting customer login for email: {}", loginRequest.getEmail());
-        JwtAuthResponse response = authService.customerLogin(loginRequest);
+        JwtAuthResponse response = authService.customerLogin(loginRequest, request);
         log.info("Customer login successful for email: {}", loginRequest.getEmail());
         return ResponseEntity.ok(response);
     }
