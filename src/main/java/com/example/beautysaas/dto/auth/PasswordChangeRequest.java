@@ -31,4 +31,11 @@ public class PasswordChangeRequest {
      */
     @NotBlank(message = "Confirm password is required")
     private String confirmPassword;
+    
+    /**
+     * Utility method to check if newPassword and confirmPassword match.
+     */
+    public boolean isNewPasswordConfirmed() {
+        return newPassword != null && newPassword.equals(confirmPassword);
+    }
 }
