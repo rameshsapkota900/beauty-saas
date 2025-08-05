@@ -27,6 +27,7 @@ public class SecurityService {
     private final SecurityAuditLogRepository securityAuditLogRepository;
     private final RateLimitService rateLimitService;
     private final SecurityMetricsService securityMetricsService;
+    private final IpGeolocationService ipGeolocationService;
     private final Map<String, List<LoginAttempt>> ipLoginAttempts = new ConcurrentHashMap<>();
 
     @Value("${security.account-lockout.max-attempts:5}")
@@ -102,6 +103,13 @@ public class SecurityService {
      */
     @Transactional
     public void recordSuccessfulLogin(String email, String ipAddress, String userAgent, String sessionId) {
+        // Check for suspicious location changes
+        if (ipGeolocationService.isSuspiciousLocationChange(email, ipAddress)) {
+            logSecurityEvent(email, "SUSPICIOUS_LOCATION", ipAddress, userAgent,
+                    "Suspicious location change detected during login", false);
+            // Additional security measures can be implemented here
+        }
+        
         // Reset failed attempts
         accountLockoutRepository.findByEmail(email).ifPresent(lockout -> {
             lockout.setFailedAttempts(0);
