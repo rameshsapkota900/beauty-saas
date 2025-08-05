@@ -2,6 +2,7 @@ package com.example.beautysaas.service;
 
 import com.example.beautysaas.entity.AccountLockout;
 import com.example.beautysaas.entity.SecurityAuditLog;
+import com.example.beautysaas.entity.UserSession;
 import com.example.beautysaas.repository.AccountLockoutRepository;
 import com.example.beautysaas.repository.SecurityAuditLogRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class SecurityService {
     private final RateLimitService rateLimitService;
     private final SecurityMetricsService securityMetricsService;
     private final IpGeolocationService ipGeolocationService;
+    private final UserSessionService userSessionService;
     private final Map<String, List<LoginAttempt>> ipLoginAttempts = new ConcurrentHashMap<>();
 
     @Value("${security.account-lockout.max-attempts:5}")
@@ -118,13 +120,16 @@ public class SecurityService {
             accountLockoutRepository.save(lockout);
         });
 
+        // Create new session
+        UserSession session = userSessionService.createSession(email, ipAddress, userAgent);
+
         // Log successful login
         SecurityAuditLog auditLog = SecurityAuditLog.builder()
                 .email(email)
                 .eventType("LOGIN_SUCCESS")
                 .ipAddress(ipAddress)
                 .userAgent(userAgent)
-                .sessionId(sessionId)
+                .sessionId(session.getSessionId())
                 .details("Successful login")
                 .success(true)
                 .build();
