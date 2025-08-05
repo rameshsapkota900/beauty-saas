@@ -1,17 +1,23 @@
 package com.example.beautysaas.service;
 
 import com.example.beautysaas.dto.auth.PasswordStrengthResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class PasswordPolicyService {
+
+    private final PasswordHistoryService passwordHistoryService;
 
     @Value("${security.password.min-length:8}")
     private int minLength;
@@ -27,6 +33,15 @@ public class PasswordPolicyService {
 
     @Value("${security.password.require-special-chars:true}")
     private boolean requireSpecialChars;
+    
+    @Value("${security.password.max-age-days:90}")
+    private int maxAgeDays;
+    
+    @Value("${security.password.min-unique-chars:6}")
+    private int minUniqueChars;
+    
+    @Value("${security.password.history-count:5}")
+    private int historyCount;
 
     private static final Pattern UPPERCASE_PATTERN = Pattern.compile("[A-Z]");
     private static final Pattern LOWERCASE_PATTERN = Pattern.compile("[a-z]");
@@ -173,6 +188,34 @@ public class PasswordPolicyService {
         if (requireSpecialChars && !SPECIAL_CHAR_PATTERN.matcher(password).find()) {
             suggestions.add("Add special characters (!@#$%^&*)");
         }
+        
+        return suggestions;
+    }
+    
+    /**
+     * Check if password change is required
+     */
+    public boolean isPasswordChangeRequired(String email) {
+        LocalDateTime lastChanged = passwordHistoryService.getLastPasswordChangeTime(email)
+                .orElse(LocalDateTime.now().minusYears(1)); // If no history, assume very old password
+                
+        return lastChanged.plusDays(maxAgeDays)
+                .isBefore(LocalDateTime.now());
+    }
+    
+    /**
+     * Check if password meets unique character requirement
+     */
+    public boolean hasEnoughUniqueCharacters(String password) {
+        return password.chars().distinct().count() >= minUniqueChars;
+    }
+    
+    /**
+     * Check if password has been previously used
+     */
+    public boolean isPasswordPreviouslyUsed(String email, String password) {
+        return passwordHistoryService.isPasswordPreviouslyUsed(email, password);
+    }
         
         if (password.length() < 12) {
             suggestions.add("Consider using a longer password for better security");
