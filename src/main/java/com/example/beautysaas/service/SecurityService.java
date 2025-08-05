@@ -7,6 +7,7 @@ import com.example.beautysaas.repository.SecurityAuditLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class SecurityService {
     private final AccountLockoutRepository accountLockoutRepository;
     private final SecurityAuditLogRepository securityAuditLogRepository;
     private final RateLimitService rateLimitService;
+    private final SecurityMetricsService securityMetricsService;
     private final Map<String, List<LoginAttempt>> ipLoginAttempts = new ConcurrentHashMap<>();
 
     @Value("${security.account-lockout.max-attempts:5}")
@@ -67,8 +69,9 @@ public class SecurityService {
      */
     @Transactional
     public void recordFailedLoginAttempt(String email, String ipAddress, String userAgent) {
-        // Log security event
+        // Log security event and update metrics
         logSecurityEvent(email, "LOGIN_FAILURE", ipAddress, userAgent, "Failed login attempt", false);
+        securityMetricsService.updateMetrics(LocalDateTime.now().minusMinutes(5), LocalDateTime.now());
 
         AccountLockout lockout = accountLockoutRepository.findByEmail(email)
                 .orElse(AccountLockout.builder()
@@ -178,7 +181,7 @@ public class SecurityService {
                     String.format("Multiple failed login attempts from IP: %s", ipAddress), false);
             
             // Apply rate limiting for suspicious IP
-            rateLimitService.markSuspiciousIP(ipAddress);
+            rateLimitService.addToBlacklist(ipAddress);
         }
     }
 
