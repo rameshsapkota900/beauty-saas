@@ -19,14 +19,23 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class AuditTrailService {
     private final AuditTrailRepository auditTrailRepository;
-    private final Map<String, Integer> actionFrequencyMap = new ConcurrentHashMap<>();
+    private final ActionFrequencyMonitor actionFrequencyMonitor;
+    private final SecurityViolationTracker securityViolationTracker;
     
     @Async
     @Transactional
     public void logAction(String userId, String action, String targetEntity, String details) {
-        // Record action frequency
-        String key = userId + ":" + action;
-        actionFrequencyMap.compute(key, (k, v) -> v == null ? 1 : v + 1);
+        // Check if user is locked out
+        if (securityViolationTracker.isLockedOut(userId)) {
+            throw new SecurityException("Account is temporarily locked due to security violations");
+        }
+
+        // Record and check action frequency
+        actionFrequencyMonitor.recordAction(userId, action);
+        if (actionFrequencyMonitor.isFrequencyExceeded(userId, action)) {
+            securityViolationTracker.recordViolation(userId);
+            log.warn("Suspicious activity detected for user: {}, action: {}", userId, action);
+        }
         
         // Create audit log entry
         AuditTrail auditLog = AuditTrail.builder()

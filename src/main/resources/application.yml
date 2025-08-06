@@ -50,3 +50,12 @@ logging:
     com.example.beautysaas: DEBUG # Set to INFO or WARN in production
     org.springframework.web: INFO
     org.hibernate: INFO
+
+# Audit Trail Configuration
+audit:
+  retention:
+    enabled: true
+    schedule: "0 0 1 * * ?" # 1 AM every day
+    retention-months: 6 # Keep 6 months of regular logs
+    critical-retention-months: 24 # Keep 24 months of critical security events
+    batch-size: 1000 # Number of records to process in each batch
