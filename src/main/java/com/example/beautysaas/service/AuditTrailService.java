@@ -1,10 +1,16 @@
 package com.example.beautysaas.service;
 
+import com.example.beautysaas.entity.AuditTrail;
+import com.example.beautysaas.repository.AuditTrailRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -12,9 +18,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @RequiredArgsConstructor
 public class AuditTrailService {
-    private final SecurityAuditLogRepository securityAuditLogRepository;
+    private final AuditTrailRepository auditTrailRepository;
     private final Map<String, Integer> actionFrequencyMap = new ConcurrentHashMap<>();
     
+    @Async
     @Transactional
     public void logAction(String userId, String action, String targetEntity, String details) {
         // Record action frequency
@@ -22,16 +29,17 @@ public class AuditTrailService {
         actionFrequencyMap.compute(key, (k, v) -> v == null ? 1 : v + 1);
         
         // Create audit log entry
-        SecurityAuditLog auditLog = SecurityAuditLog.builder()
+        AuditTrail auditLog = AuditTrail.builder()
             .email(userId)
-            .eventType(action)
-            .details(String.format("Action: %s, Target: %s, Details: %s",
+            .eventType(AuditTrail.AuditEventType.valueOf(action))
+            .eventDetails(String.format("Action: %s, Target: %s, Details: %s",
                                  action, targetEntity, details))
-            .timestamp(LocalDateTime.now())
-            .success(true)
+            .severity(AuditTrail.EventSeverity.INFO)
+            .status(AuditTrail.EventStatus.SUCCESS)
+            .createdAt(LocalDateTime.now())
             .build();
         
-        securityAuditLogRepository.save(auditLog);
+        auditTrailRepository.save(auditLog);
         
         // Check for suspicious activity
         checkActionFrequency(userId, action);
@@ -45,16 +53,17 @@ public class AuditTrailService {
             log.warn("High frequency action detected - User: {}, Action: {}, Frequency: {}",
                     userId, action, frequency);
             
-            SecurityAuditLog warningLog = SecurityAuditLog.builder()
+            AuditTrail warningLog = AuditTrail.builder()
                 .email(userId)
-                .eventType("HIGH_FREQUENCY_WARNING")
-                .details(String.format("High frequency of action detected: %s (Count: %d)",
+                .eventType(AuditTrail.AuditEventType.SECURITY_WARNING)
+                .eventDetails(String.format("High frequency of action detected: %s (Count: %d)",
                                      action, frequency))
-                .timestamp(LocalDateTime.now())
-                .success(false)
+                .severity(AuditTrail.EventSeverity.WARNING)
+                .status(AuditTrail.EventStatus.FAILURE)
+                .createdAt(LocalDateTime.now())
                 .build();
             
-            securityAuditLogRepository.save(warningLog);
+            auditTrailRepository.save(warningLog);
         }
     }
     
@@ -76,16 +85,74 @@ public class AuditTrailService {
         log.info("Cleared action frequency for user: {}", userId);
     }
     
+    @Async
     @Transactional
     public void logSystemEvent(String eventType, String details) {
-        SecurityAuditLog systemLog = SecurityAuditLog.builder()
+        AuditTrail systemLog = AuditTrail.builder()
             .email("SYSTEM")
-            .eventType(eventType)
-            .details(details)
-            .timestamp(LocalDateTime.now())
-            .success(true)
+            .eventType(AuditTrail.AuditEventType.valueOf(eventType))
+            .eventDetails(details)
+            .severity(AuditTrail.EventSeverity.INFO)
+            .status(AuditTrail.EventStatus.SUCCESS)
+            .createdAt(LocalDateTime.now())
             .build();
         
-        securityAuditLogRepository.save(systemLog);
+        auditTrailRepository.save(systemLog);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AuditTrail> getUserAuditTrails(String email, Pageable pageable) {
+        return auditTrailRepository.findByEmailOrderByCreatedAtDesc(email, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AuditTrail> getEventTypeAuditTrails(AuditTrail.AuditEventType eventType, Pageable pageable) {
+        return auditTrailRepository.findByEventTypeOrderByCreatedAtDesc(eventType, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AuditTrail> getSecurityIncidentsSince(LocalDateTime since) {
+        return auditTrailRepository.findRecentSecurityIncidents(since);
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> getUsersWithRecentEventType(
+            AuditTrail.AuditEventType eventType,
+            AuditTrail.EventStatus status,
+            LocalDateTime since) {
+        return auditTrailRepository.findUsersWithRecentEventType(eventType, status, since);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasUserRecentEvent(
+            String email,
+            AuditTrail.AuditEventType eventType,
+            AuditTrail.EventStatus status,
+            LocalDateTime since) {
+        return auditTrailRepository.hasRecentEvent(email, eventType, status, since);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AuditTrail> getUserEventsByTypeInPeriod(
+            String email,
+            AuditTrail.AuditEventType eventType,
+            LocalDateTime startTime,
+            LocalDateTime endTime) {
+        return auditTrailRepository.findByEmailAndEventTypeAndCreatedAtBetweenOrderByCreatedAtDesc(
+                email, eventType, startTime, endTime);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AuditTrail> searchAuditTrails(String searchQuery, Pageable pageable) {
+        return auditTrailRepository.searchAuditTrails(searchQuery, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AuditTrail> getRecentEventsByTypeAndStatus(
+            String email,
+            AuditTrail.AuditEventType eventType,
+            AuditTrail.EventStatus status,
+            LocalDateTime since) {
+        return auditTrailRepository.findRecentEventsByTypeAndStatus(email, eventType, status, since);
     }
 }
