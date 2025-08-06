@@ -51,6 +51,29 @@ public interface AuditTrailRepository extends JpaRepository<AuditTrail, Long> {
             @Param("eventType") AuditTrail.AuditEventType eventType,
             @Param("status") AuditTrail.EventStatus status,
             @Param("since") LocalDateTime since);
+            
+    long countByCreatedAtBetween(LocalDateTime startTime, LocalDateTime endTime);
+
+    @Query("SELECT a FROM AuditTrail a WHERE a.createdAt BETWEEN :startTime AND :endTime AND a.severity IN ('HIGH', 'CRITICAL')")
+    List<AuditTrail> findSecurityIncidents(
+        @Param("startTime") LocalDateTime startTime,
+        @Param("endTime") LocalDateTime endTime
+    );
+
+    @Query("SELECT a FROM AuditTrail a WHERE a.createdAt BETWEEN :startTime AND :endTime")
+    List<AuditTrail> findUserActivity(
+        @Param("startTime") LocalDateTime startTime,
+        @Param("endTime") LocalDateTime endTime
+    );
+
+    @Query("SELECT a FROM AuditTrail a WHERE a.createdAt BETWEEN :startTime AND :endTime AND a.resourceType IS NOT NULL")
+    List<AuditTrail> findResourceAccess(
+        @Param("startTime") LocalDateTime startTime,
+        @Param("endTime") LocalDateTime endTime
+    );
+            @Param("eventType") AuditTrail.AuditEventType eventType,
+            @Param("status") AuditTrail.EventStatus status,
+            @Param("since") LocalDateTime since);
 
     @Query(value = "SELECT a.* FROM audit_trails a WHERE " +
            "to_tsvector('english', a.event_details || ' ' || a.metadata) @@ to_tsquery('english', :searchQuery) " +
