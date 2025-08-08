@@ -71,9 +71,6 @@ public interface AuditTrailRepository extends JpaRepository<AuditTrail, Long> {
         @Param("startTime") LocalDateTime startTime,
         @Param("endTime") LocalDateTime endTime
     );
-            @Param("eventType") AuditTrail.AuditEventType eventType,
-            @Param("status") AuditTrail.EventStatus status,
-            @Param("since") LocalDateTime since);
 
     @Query(value = "SELECT a.* FROM audit_trails a WHERE " +
            "to_tsvector('english', a.event_details || ' ' || a.metadata) @@ to_tsquery('english', :searchQuery) " +

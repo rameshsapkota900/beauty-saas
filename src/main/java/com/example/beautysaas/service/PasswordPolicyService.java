@@ -216,11 +216,4 @@ public class PasswordPolicyService {
     public boolean isPasswordPreviouslyUsed(String email, String password) {
         return passwordHistoryService.isPasswordPreviouslyUsed(email, password);
     }
-        
-        if (password.length() < 12) {
-            suggestions.add("Consider using a longer password for better security");
-        }
-        
-        return suggestions;
-    }
 }
