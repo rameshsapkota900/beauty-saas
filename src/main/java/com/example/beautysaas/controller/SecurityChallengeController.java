@@ -42,4 +42,38 @@ public class SecurityChallengeController {
         securityChallengeService.invalidateChallenge(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/risk/{email}")
+    public ResponseEntity<SecurityRiskAssessmentDTO> getUserRiskAssessment(@PathVariable String email) {
+        return ResponseEntity.ok(securityChallengeService.getUserRiskAssessment(email));
+    }
+
+    @PostMapping("/{id}/device-info")
+    public ResponseEntity<SecurityChallengeResponse> updateDeviceInfo(
+            @PathVariable Long id,
+            @Valid @RequestBody DeviceInfoRequest request) {
+        return ResponseEntity.ok(securityChallengeService.updateDeviceInfo(id, request));
+    }
+
+    @GetMapping("/security-level/{email}")
+    public ResponseEntity<SecurityLevelDTO> getUserSecurityLevel(@PathVariable String email) {
+        return ResponseEntity.ok(securityChallengeService.getUserSecurityLevel(email));
+    }
+
+    @PostMapping("/{id}/security-level")
+    public ResponseEntity<SecurityChallengeResponse> updateSecurityLevel(
+            @PathVariable Long id,
+            @Valid @RequestBody SecurityLevelUpdateRequest request) {
+        return ResponseEntity.ok(securityChallengeService.updateSecurityLevel(id, request));
+    }
+
+    @GetMapping("/stats/{email}")
+    public ResponseEntity<SecurityStatsDTO> getUserSecurityStats(@PathVariable String email) {
+        return ResponseEntity.ok(securityChallengeService.getUserSecurityStats(email));
+    }
+
+    @PostMapping("/{id}/reset-attempts")
+    public ResponseEntity<SecurityChallengeResponse> resetAttempts(@PathVariable Long id) {
+        return ResponseEntity.ok(securityChallengeService.resetAttempts(id));
+    }
 }
