@@ -55,6 +55,9 @@ public class Category {
 
     @Column(name = "meta_description")
     private String metaDescription;
+    
+    @Column(name = "slug", nullable = false, unique = true)
+    private String slug;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -91,5 +94,13 @@ public class Category {
             this.level = 0;
             this.path = "/" + this.id;
         }
+        
+        if (this.slug == null || this.slug.isEmpty()) {
+            this.slug = generateSlug();
+        }
+    }
+    
+    private String generateSlug() {
+        return SlugUtil.toSlug(this.name);
     }
 }
