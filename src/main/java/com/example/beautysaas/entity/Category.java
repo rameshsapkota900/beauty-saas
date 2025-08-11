@@ -10,6 +10,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -37,6 +38,7 @@ public class Category {
     private String description;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean active = true;
 
     @Column(name = "display_order")
@@ -64,4 +66,30 @@ public class Category {
     
     @Version
     private Long version;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Category parent;
+    
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    private List<Category> children;
+    
+    @Column(name = "level")
+    @Builder.Default
+    private Integer level = 0;
+    
+    @Column(name = "path")
+    private String path;
+    
+    @PrePersist
+    @PreUpdate
+    private void updatePathAndLevel() {
+        if (parent != null) {
+            this.level = parent.getLevel() + 1;
+            this.path = parent.getPath() + "/" + this.id;
+        } else {
+            this.level = 0;
+            this.path = "/" + this.id;
+        }
+    }
 }
