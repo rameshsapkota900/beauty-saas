@@ -4,6 +4,7 @@ import com.example.beautysaas.dto.category.CategoryCreateRequest;
 import com.example.beautysaas.dto.category.CategoryDto;
 import com.example.beautysaas.dto.category.CategoryUpdateRequest;
 import com.example.beautysaas.service.CategoryService;
+import com.example.beautysaas.service.CategoryTreeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,6 +27,7 @@ import java.util.UUID;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final CategoryTreeService categoryTreeService;
 
     public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
