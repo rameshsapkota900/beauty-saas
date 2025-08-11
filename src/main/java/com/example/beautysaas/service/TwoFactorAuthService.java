@@ -1,14 +1,21 @@
 package com.example.beautysaas.service;
 
+import com.example.beautysaas.entity.TwoFactorSecret;
+import com.example.beautysaas.repository.TwoFactorSecretRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -18,6 +25,7 @@ public class TwoFactorAuthService {
     private final TwoFactorSecretRepository secretRepository;
     private final TotpService totpService;
     private final SecurityEventNotifierService eventNotifier;
+    private final PasswordEncoder passwordEncoder;
     
     @Value("${security.2fa.secret-length:32}")
     private int secretLength;

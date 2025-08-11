@@ -36,6 +36,24 @@ public class Category {
     @Column(length = 500)
     private String description;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
+    @Column(name = "display_order")
+    private int displayOrder;
+
+    @Column(name = "icon_url")
+    private String iconUrl;
+
+    @Column(name = "color_code", length = 7)
+    private String colorCode;
+
+    @Column(name = "meta_keywords")
+    private String metaKeywords;
+
+    @Column(name = "meta_description")
+    private String metaDescription;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -43,4 +61,7 @@ public class Category {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    @Version
+    private Long version;
 }
