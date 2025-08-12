@@ -18,9 +18,20 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "categories", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"parlour_id", "name"})
-})
+@Table(name = "categories", 
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"parlour_id", "name"}),
+        @UniqueConstraint(columnNames = {"parlour_id", "slug"})
+    },
+    indexes = {
+        @Index(name = "idx_category_parlour_id", columnList = "parlour_id"),
+        @Index(name = "idx_category_parent_id", columnList = "parent_id"),
+        @Index(name = "idx_category_slug", columnList = "slug"),
+        @Index(name = "idx_category_active", columnList = "active"),
+        @Index(name = "idx_category_display_order", columnList = "display_order"),
+        @Index(name = "idx_category_path", columnList = "path")
+    }
+)
 @EntityListeners(AuditingEntityListener.class)
 public class Category {
     @Id
