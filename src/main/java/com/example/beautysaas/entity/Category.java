@@ -32,9 +32,12 @@ public class Category {
     private Parlour parlour;
 
     @Column(nullable = false, length = 100)
+    @jakarta.validation.constraints.NotBlank(message = "Category name is required")
+    @jakarta.validation.constraints.Size(min = 2, max = 100, message = "Category name must be between 2 and 100 characters")
     private String name;
 
     @Column(length = 500)
+    @jakarta.validation.constraints.Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
 
     @Column(nullable = false)
@@ -45,15 +48,19 @@ public class Category {
     private int displayOrder;
 
     @Column(name = "icon_url")
+    @jakarta.validation.constraints.Pattern(regexp = "^(https?:\\/\\/)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w \\.-]*)*\\/?$", message = "Invalid URL format")
     private String iconUrl;
 
     @Column(name = "color_code", length = 7)
+    @jakarta.validation.constraints.Pattern(regexp = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", message = "Invalid color code format")
     private String colorCode;
 
-    @Column(name = "meta_keywords")
+    @Column(name = "meta_keywords", length = 255)
+    @jakarta.validation.constraints.Size(max = 255, message = "Meta keywords cannot exceed 255 characters")
     private String metaKeywords;
 
-    @Column(name = "meta_description")
+    @Column(name = "meta_description", length = 500)
+    @jakarta.validation.constraints.Size(max = 500, message = "Meta description cannot exceed 500 characters")
     private String metaDescription;
     
     @Column(name = "slug", nullable = false, unique = true)
