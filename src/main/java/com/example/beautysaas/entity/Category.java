@@ -19,7 +19,7 @@ import java.util.UUID;
 @Builder
 @Entity
 @org.hibernate.annotations.Cache(usage = org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE)
-@Table(name = "categories", 
+@Table(name = "bs_categories", 
     uniqueConstraints = {
         @UniqueConstraint(columnNames = {"parlour_id", "name"}),
         @UniqueConstraint(columnNames = {"parlour_id", "slug"})
