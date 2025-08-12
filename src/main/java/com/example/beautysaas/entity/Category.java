@@ -147,6 +147,35 @@ public class Category {
         return SlugUtil.toSlug(this.name);
     }
 
+    @PrePersist
+    @PreUpdate
+    private void validateBusinessRules() {
+        // Check for circular references
+        if (this.parent != null && (this.equals(this.parent) || this.parent.isDescendantOf(this))) {
+            throw new CategoryValidationException("Circular reference detected in category hierarchy");
+        }
+
+        // Validate level constraints
+        if (this.level != null && this.level < 0) {
+            throw new CategoryValidationException("Category level cannot be negative");
+        }
+
+        // Validate max depth (assuming max depth of 5)
+        if (this.level != null && this.level > 5) {
+            throw new CategoryValidationException("Category hierarchy cannot exceed 5 levels");
+        }
+
+        // Validate parent-child relationship
+        if (this.parent != null && !this.parlour.equals(this.parent.getParlour())) {
+            throw new CategoryValidationException("Parent category must belong to the same parlour");
+        }
+
+        // Validate path format
+        if (this.path != null && !this.path.startsWith("/")) {
+            throw new CategoryValidationException("Category path must start with '/'");
+        }
+    }
+
     public boolean isRoot() {
         return parent == null;
     }
