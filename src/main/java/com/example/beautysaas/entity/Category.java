@@ -94,6 +94,9 @@ public class Category {
     private Category parent;
     
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    @org.hibernate.annotations.Cache(usage = org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE)
+    @org.hibernate.annotations.BatchSize(size = 20)
+    @OrderBy("displayOrder ASC")
     private List<Category> children;
     
     @Column(name = "level")
