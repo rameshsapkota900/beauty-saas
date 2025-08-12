@@ -105,16 +105,41 @@ public class Category {
     @PrePersist
     @PreUpdate
     private void updatePathAndLevel() {
+        // Handle level updates
         if (parent != null) {
-            this.level = parent.getLevel() + 1;
-            this.path = parent.getPath() + "/" + this.id;
+            this.level = (parent.getLevel() != null) ? parent.getLevel() + 1 : 1;
         } else {
             this.level = 0;
-            this.path = "/" + this.id;
+        }
+
+        // Handle path updates with null safety
+        if (this.id != null) {
+            if (parent != null && parent.getPath() != null) {
+                this.path = parent.getPath() + "/" + this.id;
+            } else {
+                this.path = "/" + this.id;
+            }
         }
         
-        if (this.slug == null || this.slug.isEmpty()) {
+        // Ensure slug is always set
+        if (this.slug == null || this.slug.trim().isEmpty()) {
             this.slug = generateSlug();
+        }
+
+        // Ensure display order is valid
+        if (this.displayOrder < 0) {
+            this.displayOrder = 0;
+        }
+
+        // Clean up meta fields
+        if (this.metaKeywords != null) {
+            this.metaKeywords = this.metaKeywords.trim();
+        }
+        if (this.metaDescription != null) {
+            this.metaDescription = this.metaDescription.trim();
+        }
+        if (this.name != null) {
+            this.name = this.name.trim();
         }
     }
     
