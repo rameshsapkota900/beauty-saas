@@ -121,4 +121,37 @@ public class Category {
     private String generateSlug() {
         return SlugUtil.toSlug(this.name);
     }
+
+    public boolean isRoot() {
+        return parent == null;
+    }
+
+    public boolean hasChildren() {
+        return children != null && !children.isEmpty();
+    }
+
+    public boolean isDescendantOf(Category ancestor) {
+        if (this.parent == null) return false;
+        if (this.parent.equals(ancestor)) return true;
+        return this.parent.isDescendantOf(ancestor);
+    }
+
+    public boolean isAncestorOf(Category descendant) {
+        return descendant != null && descendant.isDescendantOf(this);
+    }
+
+    public int getDepth() {
+        return this.level != null ? this.level : 0;
+    }
+
+    public String getFullPath() {
+        if (this.path == null) {
+            updatePathAndLevel();
+        }
+        return this.path;
+    }
+
+    public boolean isLeaf() {
+        return !hasChildren();
+    }
 }
