@@ -55,6 +55,16 @@ public class Category {
     @Column(nullable = false)
     @Builder.Default
     private boolean active = true;
+    
+    @Column(name = "deleted")
+    @Builder.Default
+    private boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by")
+    private String deletedBy;
 
     @Column(name = "display_order")
     private int displayOrder;
