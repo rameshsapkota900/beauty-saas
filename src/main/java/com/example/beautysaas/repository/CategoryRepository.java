@@ -28,6 +28,9 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
     
     @Query("SELECT COUNT(c) > 0 FROM Category c WHERE c.parent.id = :categoryId")
     boolean hasChildren(@Param("categoryId") UUID categoryId);
+
+    @Query("SELECT COUNT(c) > 0 FROM Category c WHERE c.parlour.id = :parlourId AND c.slug = :slug AND (:excludeCategoryId IS NULL OR c.id != :excludeCategoryId)")
+    boolean existsBySlugAndParlourId(@Param("slug") String slug, @Param("parlourId") UUID parlourId, @Param("excludeCategoryId") UUID excludeCategoryId);
     
     @Query("SELECT c FROM Category c WHERE c.parlour.id = :parlourId AND c.path LIKE :pathPattern")
     List<Category> findByPathPattern(
