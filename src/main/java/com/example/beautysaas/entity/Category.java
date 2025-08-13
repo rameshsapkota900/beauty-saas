@@ -96,10 +96,13 @@ public class Category {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "created_by")
+    @Column(name = "created_by", length = 50, nullable = false)
+    @jakarta.validation.constraints.NotBlank(message = "Created by is required")
+    @jakarta.validation.constraints.Size(max = 50, message = "Created by cannot exceed 50 characters")
     private String createdBy;
 
-    @Column(name = "updated_by")
+    @Column(name = "updated_by", length = 50)
+    @jakarta.validation.constraints.Size(max = 50, message = "Updated by cannot exceed 50 characters")
     private String updatedBy;
     
     @Version
