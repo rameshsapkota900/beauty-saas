@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,4 +47,40 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
     
     @Query("SELECT MAX(c.level) FROM Category c WHERE c.parlour.id = :parlourId")
     Optional<Integer> findMaxLevel(@Param("parlourId") UUID parlourId);
+    
+    @Query("SELECT c FROM Category c WHERE c.parlour.id = :parlourId AND c.deleted = false AND c.active = true ORDER BY c.displayOrder")
+    Page<Category> findActiveByParlourId(@Param("parlourId") UUID parlourId, Pageable pageable);
+    
+    @Query("SELECT c FROM Category c WHERE c.parlour.id = :parlourId AND " +
+           "(LOWER(c.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(c.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) AND " +
+           "c.deleted = false ORDER BY c.displayOrder")
+    Page<Category> searchCategories(
+        @Param("parlourId") UUID parlourId,
+        @Param("searchTerm") String searchTerm,
+        Pageable pageable
+    );
+    
+    @Query("SELECT MAX(c.displayOrder) FROM Category c WHERE c.parlour.id = :parlourId AND c.parent.id = :parentId")
+    Optional<Integer> findMaxDisplayOrder(
+        @Param("parlourId") UUID parlourId,
+        @Param("parentId") UUID parentId
+    );
+    
+    @Query("UPDATE Category c SET c.deleted = true, c.deletedAt = :deletedAt, c.deletedBy = :deletedBy WHERE c.id = :id OR c.path LIKE CONCAT('%/', :id, '/%')")
+    int softDeleteWithChildren(
+        @Param("id") UUID id,
+        @Param("deletedAt") LocalDateTime deletedAt,
+        @Param("deletedBy") String deletedBy
+    );
+    
+    @Query("SELECT COUNT(c) > 0 FROM Category c WHERE c.parlour.id = :parlourId AND " +
+           "c.parent.id = :parentId AND c.displayOrder = :displayOrder AND " +
+           "c.id != :excludeCategoryId AND c.deleted = false")
+    boolean existsByDisplayOrder(
+        @Param("parlourId") UUID parlourId,
+        @Param("parentId") UUID parentId,
+        @Param("displayOrder") int displayOrder,
+        @Param("excludeCategoryId") UUID excludeCategoryId
+    );
 }
