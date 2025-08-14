@@ -120,4 +120,26 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
         @Param("startOrder") int startOrder,
         @Param("endOrder") int endOrder
     );
+
+    @Query("SELECT COUNT(c) FROM Category c WHERE c.parlour.id = :parlourId AND c.deleted = false GROUP BY c.level")
+    Map<Integer, Long> countByLevel(@Param("parlourId") UUID parlourId);
+
+    @Query("UPDATE Category c SET c.active = :active, c.updatedAt = :updatedAt, c.updatedBy = :updatedBy " +
+           "WHERE c.id IN :categoryIds AND c.parlour.id = :parlourId")
+    @Modifying
+    int bulkUpdateStatus(
+        @Param("categoryIds") List<UUID> categoryIds,
+        @Param("parlourId") UUID parlourId,
+        @Param("active") boolean active,
+        @Param("updatedAt") LocalDateTime updatedAt,
+        @Param("updatedBy") String updatedBy
+    );
+
+    @Query("SELECT new com.example.beautysaas.dto.category.CategoryStatsDto(" +
+           "COUNT(c), " +
+           "SUM(CASE WHEN c.active = true THEN 1 ELSE 0 END), " +
+           "SUM(CASE WHEN c.deleted = true THEN 1 ELSE 0 END), " +
+           "MAX(c.level)) " +
+           "FROM Category c WHERE c.parlour.id = :parlourId")
+    CategoryStatsDto getCategoryStatistics(@Param("parlourId") UUID parlourId);
 }
