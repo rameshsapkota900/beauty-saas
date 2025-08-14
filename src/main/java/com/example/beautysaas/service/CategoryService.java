@@ -124,4 +124,49 @@ public class CategoryService {
         dto.setParlourId(category.getParlour().getId());
         return dto;
     }
+
+    @Transactional(readOnly = true)
+    public CategoryStatsDto getCategoryStatistics(String adminEmail, UUID parlourId) {
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", adminEmail));
+
+        if (!admin.getRole().getName().equals("ADMIN") || !admin.getParlour().getId().equals(parlourId)) {
+            throw new BeautySaasApiException(HttpStatus.FORBIDDEN, "User is not an Admin or not authorized for this parlour.");
+        }
+
+        CategoryStatsDto stats = categoryRepository.getCategoryStatistics(parlourId);
+        Map<Integer, Long> levelCounts = categoryRepository.countByLevel(parlourId);
+        
+        if (stats == null) {
+            // Return empty stats if no categories exist
+            return CategoryStatsDto.builder()
+                    .totalCategories(0L)
+                    .activeCategories(0L)
+                    .deletedCategories(0L)
+                    .maxLevel(0)
+                    .build();
+        }
+
+        return stats;
+    }
+
+    @Transactional
+    public void bulkUpdateStatus(String adminEmail, UUID parlourId, List<UUID> categoryIds, boolean active) {
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", adminEmail));
+
+        if (!admin.getRole().getName().equals("ADMIN") || !admin.getParlour().getId().equals(parlourId)) {
+            throw new BeautySaasApiException(HttpStatus.FORBIDDEN, "User is not an Admin or not authorized for this parlour.");
+        }
+
+        int updatedCount = categoryRepository.bulkUpdateStatus(
+            categoryIds,
+            parlourId,
+            active,
+            LocalDateTime.now(),
+            adminEmail
+        );
+
+        log.info("Bulk updated {} categories status to active={} by admin {}", updatedCount, active, adminEmail);
+    }
 }

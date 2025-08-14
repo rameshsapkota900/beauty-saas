@@ -92,4 +92,33 @@ public class CategoryController {
         categoryService.deleteCategory(principal.getName(), id);
         return ResponseEntity.noContent().build();
     }
+
+    @Operation(summary = "Get Category Statistics", description = "Retrieves statistics about categories for a parlour.")
+    @GetMapping("/admin/categories/statistics")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CategoryStatsDto> getCategoryStatistics(
+            Principal principal,
+            @Parameter(description = "ID of the parlour to get statistics for", required = true)
+            @RequestParam UUID parlourId) {
+        log.info("Admin {} retrieving category statistics for parlour {}.", principal.getName(), parlourId);
+        CategoryStatsDto stats = categoryService.getCategoryStatistics(principal.getName(), parlourId);
+        return ResponseEntity.ok(stats);
+    }
+
+    @Operation(summary = "Bulk Update Category Status", description = "Updates the active status of multiple categories.")
+    @PutMapping("/admin/categories/bulk-status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> bulkUpdateStatus(
+            Principal principal,
+            @Parameter(description = "ID of the parlour containing the categories", required = true)
+            @RequestParam UUID parlourId,
+            @Parameter(description = "List of category IDs to update", required = true)
+            @RequestBody List<UUID> categoryIds,
+            @Parameter(description = "New active status", required = true)
+            @RequestParam boolean active) {
+        log.info("Admin {} bulk updating {} categories status to {} for parlour {}.",
+                principal.getName(), categoryIds.size(), active, parlourId);
+        categoryService.bulkUpdateStatus(principal.getName(), parlourId, categoryIds, active);
+        return ResponseEntity.ok().build();
+    }
 }
