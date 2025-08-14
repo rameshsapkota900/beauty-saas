@@ -83,4 +83,41 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
         @Param("displayOrder") int displayOrder,
         @Param("excludeCategoryId") UUID excludeCategoryId
     );
+
+    @Query("SELECT c FROM Category c WHERE c.parlour.id = :parlourId AND c.deleted = :deleted AND c.active = :active ORDER BY c.displayOrder")
+    Page<Category> findByStatus(
+        @Param("parlourId") UUID parlourId,
+        @Param("deleted") boolean deleted,
+        @Param("active") boolean active,
+        Pageable pageable
+    );
+
+    @Query("SELECT c FROM Category c WHERE c.parlour.id = :parlourId AND " +
+           "(:metaKeywords IS NULL OR c.metaKeywords LIKE CONCAT('%', :metaKeywords, '%')) AND " +
+           "(:colorCode IS NULL OR c.colorCode = :colorCode) AND " +
+           "c.deleted = false ORDER BY c.displayOrder")
+    Page<Category> findByMetadata(
+        @Param("parlourId") UUID parlourId,
+        @Param("metaKeywords") String metaKeywords,
+        @Param("colorCode") String colorCode,
+        Pageable pageable
+    );
+
+    @Query("SELECT c FROM Category c WHERE c.parlour.id = :parlourId AND " +
+           "LENGTH(c.path) - LENGTH(REPLACE(c.path, '/', '')) = :depth AND " +
+           "c.deleted = false ORDER BY c.path, c.displayOrder")
+    List<Category> findByPathDepth(
+        @Param("parlourId") UUID parlourId,
+        @Param("depth") int depth
+    );
+
+    @Query("SELECT c FROM Category c WHERE c.parlour.id = :parlourId AND " +
+           "c.parent.id = :parentId AND c.displayOrder >= :startOrder AND c.displayOrder <= :endOrder AND " +
+           "c.deleted = false ORDER BY c.displayOrder")
+    List<Category> findForReordering(
+        @Param("parlourId") UUID parlourId,
+        @Param("parentId") UUID parentId,
+        @Param("startOrder") int startOrder,
+        @Param("endOrder") int endOrder
+    );
 }
