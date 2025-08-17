@@ -121,4 +121,50 @@ public class CategoryController {
         categoryService.bulkUpdateStatus(principal.getName(), parlourId, categoryIds, active);
         return ResponseEntity.ok().build();
     }
+
+    @Operation(summary = "Search Categories by Metadata", description = "Search categories using metadata fields like keywords and color code.")
+    @GetMapping("/admin/categories/search")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<CategoryDto>> searchByMetadata(
+            Principal principal,
+            @Parameter(description = "ID of the parlour", required = true)
+            @RequestParam UUID parlourId,
+            @Parameter(description = "Meta keywords to search for")
+            @RequestParam(required = false) String metaKeywords,
+            @Parameter(description = "Color code to filter by")
+            @RequestParam(required = false) String colorCode,
+            @PageableDefault(size = 20) Pageable pageable) {
+        log.info("Admin {} searching categories with metadata for parlour {}", principal.getName(), parlourId);
+        return ResponseEntity.ok(categoryService.searchByMetadata(principal.getName(), parlourId, metaKeywords, colorCode, pageable));
+    }
+
+    @Operation(summary = "Get Categories by Path Depth", description = "Retrieve categories at a specific depth in the hierarchy.")
+    @GetMapping("/admin/categories/by-depth/{depth}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<CategoryDto>> getCategoriesByDepth(
+            Principal principal,
+            @Parameter(description = "ID of the parlour", required = true)
+            @RequestParam UUID parlourId,
+            @Parameter(description = "Depth level in the category hierarchy", required = true)
+            @PathVariable int depth) {
+        log.info("Admin {} fetching categories at depth {} for parlour {}", principal.getName(), depth, parlourId);
+        return ResponseEntity.ok(categoryService.getCategoriesByDepth(principal.getName(), parlourId, depth));
+    }
+
+    @Operation(summary = "Reorder Categories", description = "Update the display order of categories within the same parent.")
+    @PutMapping("/admin/categories/reorder")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> reorderCategories(
+            Principal principal,
+            @Parameter(description = "ID of the parlour", required = true)
+            @RequestParam UUID parlourId,
+            @Parameter(description = "Parent category ID", required = false)
+            @RequestParam(required = false) UUID parentId,
+            @Parameter(description = "Category reordering details", required = true)
+            @Valid @RequestBody List<CategoryReorderRequest> reorderRequests) {
+        log.info("Admin {} reordering categories under parent {} for parlour {}", 
+                principal.getName(), parentId, parlourId);
+        categoryService.reorderCategories(principal.getName(), parlourId, parentId, reorderRequests);
+        return ResponseEntity.ok().build();
+    }
 }
