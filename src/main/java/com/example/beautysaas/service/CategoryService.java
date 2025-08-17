@@ -2,6 +2,8 @@ package com.example.beautysaas.service;
 
 import com.example.beautysaas.dto.category.CategoryCreateRequest;
 import com.example.beautysaas.dto.category.CategoryDto;
+import com.example.beautysaas.dto.category.CategoryReorderRequest;
+import com.example.beautysaas.dto.category.CategoryStatsDto;
 import com.example.beautysaas.dto.category.CategoryUpdateRequest;
 import com.example.beautysaas.entity.Category;
 import com.example.beautysaas.entity.Parlour;
@@ -19,7 +21,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -134,18 +142,31 @@ public class CategoryService {
             throw new BeautySaasApiException(HttpStatus.FORBIDDEN, "User is not an Admin or not authorized for this parlour.");
         }
 
-        CategoryStatsDto stats = categoryRepository.getCategoryStatistics(parlourId);
-        Map<Integer, Long> levelCounts = categoryRepository.countByLevel(parlourId);
-        
-        if (stats == null) {
-            // Return empty stats if no categories exist
-            return CategoryStatsDto.builder()
-                    .totalCategories(0L)
-                    .activeCategories(0L)
-                    .deletedCategories(0L)
-                    .maxLevel(0)
-                    .build();
+        Long totalCategories = categoryRepository.countTotalCategories(parlourId);
+        Long activeCategories = categoryRepository.countActiveCategories(parlourId);
+        Long deletedCategories = categoryRepository.countDeletedCategories(parlourId);
+        Integer maxLevel = categoryRepository.getMaxLevelForParlour(parlourId).orElse(0);
+
+        // Build level counts map
+        Map<Integer, Long> levelCounts = new HashMap<>();
+        List<Object[]> levelCountsRaw = categoryRepository.countByLevelRaw(parlourId);
+        for (Object[] row : levelCountsRaw) {
+            Integer level = (Integer) row[0];
+            Long count = (Long) row[1];
+            levelCounts.put(level, count);
         }
+
+        CategoryStatsDto stats = CategoryStatsDto.builder()
+                .totalCategories(totalCategories != null ? totalCategories : 0L)
+                .activeCategories(activeCategories != null ? activeCategories : 0L)
+                .deletedCategories(deletedCategories != null ? deletedCategories : 0L)
+                .maxLevel(maxLevel)
+                .categoriesPerLevel(levelCounts)
+                .lastUpdated(LocalDateTime.now())
+                .build();
+
+        log.info("Retrieved category statistics for parlour {}: {} total, {} active, {} deleted", 
+                parlourId, stats.getTotalCategories(), stats.getActiveCategories(), stats.getDeletedCategories());
 
         return stats;
     }
@@ -168,5 +189,73 @@ public class CategoryService {
         );
 
         log.info("Bulk updated {} categories status to active={} by admin {}", updatedCount, active, adminEmail);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CategoryDto> searchByMetadata(String adminEmail, UUID parlourId, String metaKeywords, String colorCode, Pageable pageable) {
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", adminEmail));
+
+        if (!admin.getRole().getName().equals("ADMIN") || !admin.getParlour().getId().equals(parlourId)) {
+            throw new BeautySaasApiException(HttpStatus.FORBIDDEN, "User is not an Admin or not authorized for this parlour.");
+        }
+
+        Page<Category> categories = categoryRepository.findByMetadata(parlourId, metaKeywords, colorCode, pageable);
+        return categories.map(this::mapToDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CategoryDto> getCategoriesByDepth(String adminEmail, UUID parlourId, int depth) {
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", adminEmail));
+
+        if (!admin.getRole().getName().equals("ADMIN") || !admin.getParlour().getId().equals(parlourId)) {
+            throw new BeautySaasApiException(HttpStatus.FORBIDDEN, "User is not an Admin or not authorized for this parlour.");
+        }
+
+        if (depth < 0) {
+            throw new BeautySaasApiException(HttpStatus.BAD_REQUEST, "Depth must be non-negative.");
+        }
+
+        List<Category> categories = categoryRepository.findByPathDepth(parlourId, depth);
+        return categories.stream().map(this::mapToDto).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void reorderCategories(String adminEmail, UUID parlourId, UUID parentId, List<CategoryReorderRequest> reorderRequests) {
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", adminEmail));
+
+        if (!admin.getRole().getName().equals("ADMIN") || !admin.getParlour().getId().equals(parlourId)) {
+            throw new BeautySaasApiException(HttpStatus.FORBIDDEN, "User is not an Admin or not authorized for this parlour.");
+        }
+
+        // Validate all categories belong to the parlour and have the correct parent
+        for (CategoryReorderRequest request : reorderRequests) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Category", "id", request.getCategoryId()));
+
+            if (!category.getParlour().getId().equals(parlourId)) {
+                throw new BeautySaasApiException(HttpStatus.FORBIDDEN, "Category does not belong to the specified parlour.");
+            }
+
+            UUID categoryParentId = category.getParent() != null ? category.getParent().getId() : null;
+            if (!Objects.equals(categoryParentId, parentId)) {
+                throw new BeautySaasApiException(HttpStatus.BAD_REQUEST, "Category parent mismatch.");
+            }
+        }
+
+        // Update display orders
+        LocalDateTime now = LocalDateTime.now();
+        for (CategoryReorderRequest request : reorderRequests) {
+            Category category = categoryRepository.findById(request.getCategoryId()).get();
+            category.setDisplayOrder(request.getDisplayOrder());
+            category.setUpdatedAt(now);
+            category.setUpdatedBy(adminEmail);
+            categoryRepository.save(category);
+        }
+
+        log.info("Reordered {} categories under parent {} for parlour {} by admin {}", 
+                reorderRequests.size(), parentId, parlourId, adminEmail);
     }
 }

@@ -2,8 +2,9 @@ package com.example.beautysaas.controller;
 
 import com.example.beautysaas.dto.category.CategoryCreateRequest;
 import com.example.beautysaas.dto.category.CategoryDto;
+import com.example.beautysaas.dto.category.CategoryReorderRequest;
+import com.example.beautysaas.dto.category.CategoryStatsDto;
 import com.example.beautysaas.dto.category.CategoryUpdateRequest;
-import com.example.beautysaas.dto.category.CategoryTreeDto;
 import com.example.beautysaas.service.CategoryService;
 import com.example.beautysaas.service.CategoryTreeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +26,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.UUID;
 
 @RestController

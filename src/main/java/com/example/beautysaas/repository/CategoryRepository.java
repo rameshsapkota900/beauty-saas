@@ -4,12 +4,14 @@ import com.example.beautysaas.entity.Category;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -121,8 +123,8 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
         @Param("endOrder") int endOrder
     );
 
-    @Query("SELECT COUNT(c) FROM Category c WHERE c.parlour.id = :parlourId AND c.deleted = false GROUP BY c.level")
-    Map<Integer, Long> countByLevel(@Param("parlourId") UUID parlourId);
+    @Query("SELECT c.level as level, COUNT(c) as count FROM Category c WHERE c.parlour.id = :parlourId AND c.deleted = false GROUP BY c.level")
+    List<Object[]> countByLevelRaw(@Param("parlourId") UUID parlourId);
 
     @Query("UPDATE Category c SET c.active = :active, c.updatedAt = :updatedAt, c.updatedBy = :updatedBy " +
            "WHERE c.id IN :categoryIds AND c.parlour.id = :parlourId")
@@ -135,11 +137,15 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
         @Param("updatedBy") String updatedBy
     );
 
-    @Query("SELECT new com.example.beautysaas.dto.category.CategoryStatsDto(" +
-           "COUNT(c), " +
-           "SUM(CASE WHEN c.active = true THEN 1 ELSE 0 END), " +
-           "SUM(CASE WHEN c.deleted = true THEN 1 ELSE 0 END), " +
-           "MAX(c.level)) " +
-           "FROM Category c WHERE c.parlour.id = :parlourId")
-    CategoryStatsDto getCategoryStatistics(@Param("parlourId") UUID parlourId);
+    @Query("SELECT COUNT(c) FROM Category c WHERE c.parlour.id = :parlourId AND c.deleted = false")
+    Long countTotalCategories(@Param("parlourId") UUID parlourId);
+
+    @Query("SELECT COUNT(c) FROM Category c WHERE c.parlour.id = :parlourId AND c.active = true AND c.deleted = false")
+    Long countActiveCategories(@Param("parlourId") UUID parlourId);
+
+    @Query("SELECT COUNT(c) FROM Category c WHERE c.parlour.id = :parlourId AND c.deleted = true")
+    Long countDeletedCategories(@Param("parlourId") UUID parlourId);
+
+    @Query("SELECT MAX(c.level) FROM Category c WHERE c.parlour.id = :parlourId AND c.deleted = false")
+    Optional<Integer> getMaxLevelForParlour(@Param("parlourId") UUID parlourId);
 }
