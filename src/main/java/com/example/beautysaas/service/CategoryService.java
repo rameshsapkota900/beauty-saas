@@ -1,5 +1,7 @@
 package com.example.beautysaas.service;
 
+import com.example.beautysaas.dto.category.CategoryBulkOperationRequest;
+import com.example.beautysaas.dto.category.CategoryBulkOperationResult;
 import com.example.beautysaas.dto.category.CategoryCreateRequest;
 import com.example.beautysaas.dto.category.CategoryDto;
 import com.example.beautysaas.dto.category.CategoryReorderRequest;
@@ -22,10 +24,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -257,5 +261,116 @@ public class CategoryService {
 
         log.info("Reordered {} categories under parent {} for parlour {} by admin {}", 
                 reorderRequests.size(), parentId, parlourId, adminEmail);
+    }
+
+    @Transactional
+    public CategoryBulkOperationResult performBulkOperation(String adminEmail, UUID parlourId, CategoryBulkOperationRequest request) {
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", adminEmail));
+
+        if (!admin.getRole().getName().equals("ADMIN") || !admin.getParlour().getId().equals(parlourId)) {
+            throw new BeautySaasApiException(HttpStatus.FORBIDDEN, "User is not an Admin or not authorized for this parlour.");
+        }
+
+        CategoryBulkOperationResult.CategoryBulkOperationResultBuilder resultBuilder = CategoryBulkOperationResult.builder()
+                .totalCount(request.getCategoryIds().size())
+                .successCount(0)
+                .failureCount(0);
+
+        List<String> errors = new ArrayList<>();
+        int successCount = 0;
+
+        for (UUID categoryId : request.getCategoryIds()) {
+            try {
+                Optional<Category> categoryOpt = categoryRepository.findById(categoryId);
+                if (!categoryOpt.isPresent()) {
+                    errors.add("Category with ID " + categoryId + " not found");
+                    continue;
+                }
+
+                Category category = categoryOpt.get();
+                if (!category.getParlour().getId().equals(parlourId)) {
+                    errors.add("Category " + categoryId + " does not belong to parlour");
+                    continue;
+                }
+
+                switch (request.getOperationType()) {
+                    case DELETE:
+                        category.setActive(false);
+                        category.setDeletedAt(LocalDateTime.now());
+                        break;
+                    case ACTIVATE:
+                        category.setActive(true);
+                        category.setDeletedAt(null);
+                        break;
+                    case DEACTIVATE:
+                        category.setActive(false);
+                        break;
+                    case ARCHIVE:
+                        category.setActive(false);
+                        break;
+                    default:
+                        errors.add("Unknown operation: " + request.getOperationType());
+                        continue;
+                }
+
+                category.setUpdatedAt(LocalDateTime.now());
+                category.setUpdatedBy(adminEmail);
+                categoryRepository.save(category);
+                successCount++;
+
+            } catch (Exception e) {
+                errors.add("Error processing category " + categoryId + ": " + e.getMessage());
+            }
+        }
+
+        resultBuilder.successCount(successCount)
+                .failureCount(request.getCategoryIds().size() - successCount)
+                .errors(errors)
+                .completedAt(LocalDateTime.now());
+
+        log.info("Bulk operation {} completed for parlour {}. Success: {}, Failures: {}", 
+                request.getOperationType(), parlourId, successCount, errors.size());
+
+        return resultBuilder.build();
+    }
+
+    public byte[] exportCategories(String adminEmail, UUID parlourId, String format, boolean includeInactive) {
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", adminEmail));
+
+        if (!admin.getRole().getName().equals("ADMIN") || !admin.getParlour().getId().equals(parlourId)) {
+            throw new BeautySaasApiException(HttpStatus.FORBIDDEN, "User is not an Admin or not authorized for this parlour.");
+        }
+
+        Page<Category> categoryPage;
+        if (includeInactive) {
+            categoryPage = categoryRepository.findByParlourId(parlourId, Pageable.unpaged());
+        } else {
+            categoryPage = categoryRepository.findActiveByParlourId(parlourId, Pageable.unpaged());
+        }
+        
+        List<CategoryDto> categoryDtos = categoryPage.getContent().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+
+        // For now, return simple CSV format as bytes
+        StringBuilder csvContent = new StringBuilder();
+        csvContent.append("ID,Name,Description,CreatedAt,UpdatedAt\n");
+        
+        for (CategoryDto dto : categoryDtos) {
+            csvContent.append(String.format("%s,%s,%s,%s,%s\n",
+                    dto.getId(),
+                    dto.getName(),
+                    dto.getDescription() != null ? dto.getDescription().replace(",", ";") : "",
+                    dto.getCreatedAt(),
+                    dto.getUpdatedAt()
+            ));
+        }
+
+        log.info("Exported {} categories for parlour {} in {} format by admin {}", 
+                categoryDtos.size(), parlourId, format, adminEmail);
+
+        return csvContent.toString().getBytes();
     }
 }

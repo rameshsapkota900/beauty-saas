@@ -1,5 +1,7 @@
 package com.example.beautysaas.controller;
 
+import com.example.beautysaas.dto.category.CategoryBulkOperationRequest;
+import com.example.beautysaas.dto.category.CategoryBulkOperationResult;
 import com.example.beautysaas.dto.category.CategoryCreateRequest;
 import com.example.beautysaas.dto.category.CategoryDto;
 import com.example.beautysaas.dto.category.CategoryReorderRequest;
@@ -207,5 +209,56 @@ public class CategoryController {
             @PathVariable Integer level) {
         log.info("Fetching categories at level {} for parlour {}", level, parlourId);
         return ResponseEntity.ok(categoryTreeService.getCategoriesByLevel(parlourId, level));
+    }
+
+    @Operation(summary = "Enhanced Bulk Operations", description = "Perform advanced bulk operations on categories with detailed results.")
+    @PostMapping("/admin/categories/bulk-operation")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CategoryBulkOperationResult> performBulkOperation(
+            Principal principal,
+            @Parameter(description = "ID of the parlour", required = true)
+            @RequestParam UUID parlourId,
+            @Parameter(description = "Bulk operation details", required = true)
+            @Valid @RequestBody CategoryBulkOperationRequest operationRequest) {
+        log.info("Admin {} performing bulk operation {} on {} categories for parlour {}",
+                principal.getName(), operationRequest.getOperationType(), 
+                operationRequest.getCategoryIds().size(), parlourId);
+        CategoryBulkOperationResult result = categoryService.performBulkOperation(
+                principal.getName(), parlourId, operationRequest);
+        return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "Export Categories", description = "Export categories data in various formats.")
+    @GetMapping("/admin/categories/export")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<byte[]> exportCategories(
+            Principal principal,
+            @Parameter(description = "ID of the parlour", required = true)
+            @RequestParam UUID parlourId,
+            @Parameter(description = "Export format")
+            @RequestParam(defaultValue = "CSV") String format,
+            @Parameter(description = "Include inactive categories")
+            @RequestParam(defaultValue = "false") boolean includeInactive) {
+        log.info("Admin {} exporting categories for parlour {} in {} format", 
+                principal.getName(), parlourId, format);
+        byte[] exportData = categoryService.exportCategories(
+                principal.getName(), parlourId, format, includeInactive);
+        
+        String contentType = getContentTypeForFormat(format);
+        String filename = String.format("categories_%s.%s", parlourId, format.toLowerCase());
+        
+        return ResponseEntity.ok()
+                .header("Content-Type", contentType)
+                .header("Content-Disposition", "attachment; filename=" + filename)
+                .body(exportData);
+    }
+
+    private String getContentTypeForFormat(String format) {
+        return switch (format.toUpperCase()) {
+            case "CSV" -> "text/csv";
+            case "EXCEL" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            case "JSON" -> "application/json";
+            default -> "application/octet-stream";
+        };
     }
 }

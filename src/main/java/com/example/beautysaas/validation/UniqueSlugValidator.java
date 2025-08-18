@@ -42,6 +42,7 @@ public class UniqueSlugValidator implements ConstraintValidator<UniqueSlug, Stri
             log.error("Error while validating slug uniqueness: {}", e.getMessage());
             return false;
         }
+    }
 
     /**
      * Helper method to check slug uniqueness when updating an existing category
