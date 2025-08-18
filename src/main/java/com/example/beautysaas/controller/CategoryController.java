@@ -4,15 +4,12 @@ import com.example.beautysaas.dto.category.CategoryCreateRequest;
 import com.example.beautysaas.dto.category.CategoryDto;
 import com.example.beautysaas.dto.category.CategoryReorderRequest;
 import com.example.beautysaas.dto.category.CategoryStatsDto;
+import com.example.beautysaas.dto.category.CategoryTreeDTO;
 import com.example.beautysaas.dto.category.CategoryUpdateRequest;
 import com.example.beautysaas.service.CategoryService;
 import com.example.beautysaas.service.CategoryTreeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +17,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -168,5 +164,48 @@ public class CategoryController {
                 principal.getName(), parentId, parlourId);
         categoryService.reorderCategories(principal.getName(), parlourId, parentId, reorderRequests);
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Get Category Tree", description = "Retrieve the full category tree for a parlour.")
+    @GetMapping("/categories/tree")
+    public ResponseEntity<List<CategoryTreeDTO>> getCategoryTree(
+            @Parameter(description = "ID of the parlour", required = true)
+            @RequestParam UUID parlourId) {
+        log.info("Fetching category tree for parlour {}", parlourId);
+        return ResponseEntity.ok(categoryTreeService.getCategoryTree(parlourId));
+    }
+
+    @Operation(summary = "Get Category Subtree", description = "Retrieve a subtree starting from a specific category.")
+    @GetMapping("/categories/{categoryId}/subtree")
+    public ResponseEntity<CategoryTreeDTO> getCategorySubtree(
+            @Parameter(description = "ID of the root category for the subtree", required = true)
+            @PathVariable UUID categoryId) {
+        log.info("Fetching category subtree for category {}", categoryId);
+        return ResponseEntity.ok(categoryTreeService.getCategorySubtree(categoryId));
+    }
+
+    @Operation(summary = "Search Category Tree", description = "Search categories and return matching tree structure.")
+    @GetMapping("/admin/categories/tree/search")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<CategoryTreeDTO>> searchCategoryTree(
+            Principal principal,
+            @Parameter(description = "ID of the parlour", required = true)
+            @RequestParam UUID parlourId,
+            @Parameter(description = "Search term", required = true)
+            @RequestParam String searchTerm) {
+        log.info("Admin {} searching category tree for parlour {} with term: {}", 
+                principal.getName(), parlourId, searchTerm);
+        return ResponseEntity.ok(categoryTreeService.searchCategoryTree(parlourId, searchTerm));
+    }
+
+    @Operation(summary = "Get Categories by Level", description = "Retrieve categories at a specific hierarchy level.")
+    @GetMapping("/categories/level/{level}")
+    public ResponseEntity<List<CategoryTreeDTO>> getCategoriesByLevel(
+            @Parameter(description = "ID of the parlour", required = true)
+            @RequestParam UUID parlourId,
+            @Parameter(description = "Hierarchy level", required = true)
+            @PathVariable Integer level) {
+        log.info("Fetching categories at level {} for parlour {}", level, parlourId);
+        return ResponseEntity.ok(categoryTreeService.getCategoriesByLevel(parlourId, level));
     }
 }
