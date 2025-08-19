@@ -5,6 +5,7 @@ import com.beautyparlour.dto.request.BookServiceRequest;
 import com.beautyparlour.dto.request.UpdateBookingStatusRequest;
 import com.beautyparlour.dto.response.ApiResponse;
 import com.beautyparlour.dto.response.CourseBookingDTO;
+import com.beautyparlour.dto.response.ServiceBookingDTO;
 import com.beautyparlour.entity.CourseBooking;
 import com.beautyparlour.entity.ServiceBooking;
 import com.beautyparlour.security.UserPrincipal;
@@ -81,18 +82,22 @@ public class BookingController {
     // Service Booking Endpoints
     @PostMapping("/book-service")
     @Operation(summary = "Book a service")
-    public ResponseEntity<ApiResponse<ServiceBooking>> bookService(@Valid @RequestBody BookServiceRequest request) {
+    public ResponseEntity<ApiResponse<ServiceBookingDTO>> bookService(@Valid @RequestBody BookServiceRequest request) {
         ServiceBooking booking = bookingService.bookService(request);
-        return ResponseEntity.ok(ApiResponse.success("Service booked successfully", booking));
+        ServiceBookingDTO bookingDTO = new ServiceBookingDTO(booking);
+        return ResponseEntity.ok(ApiResponse.success("Service booked successfully", bookingDTO));
     }
 
     @GetMapping("/my-service-bookings")
     @Operation(summary = "Get client service bookings")
-    public ResponseEntity<ApiResponse<List<ServiceBooking>>> getMyServiceBookings(
+    public ResponseEntity<ApiResponse<List<ServiceBookingDTO>>> getMyServiceBookings(
             @RequestParam String clientName,
             @RequestParam String phone) {
         List<ServiceBooking> bookings = bookingService.getServiceBookingsByClient(clientName, phone);
-        return ResponseEntity.ok(ApiResponse.success("Service bookings retrieved successfully", bookings));
+        List<ServiceBookingDTO> bookingDTOs = bookings.stream()
+                .map(ServiceBookingDTO::new)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success("Service bookings retrieved successfully", bookingDTOs));
     }
 
     @DeleteMapping("/cancel-service/{bookingId}")
@@ -104,19 +109,23 @@ public class BookingController {
 
     @GetMapping("/admin/service-bookings")
     @Operation(summary = "Get all service bookings for admin")
-    public ResponseEntity<ApiResponse<List<ServiceBooking>>> getAdminServiceBookings(
+    public ResponseEntity<ApiResponse<List<ServiceBookingDTO>>> getAdminServiceBookings(
             @AuthenticationPrincipal UserPrincipal currentUser) {
         List<ServiceBooking> bookings = bookingService.getServiceBookingsByParlour(currentUser.getParlourId());
-        return ResponseEntity.ok(ApiResponse.success("Service bookings retrieved successfully", bookings));
+        List<ServiceBookingDTO> bookingDTOs = bookings.stream()
+                .map(ServiceBookingDTO::new)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success("Service bookings retrieved successfully", bookingDTOs));
     }
 
     @PutMapping("/admin/service-bookings/{bookingId}/status")
     @Operation(summary = "Update service booking status")
-    public ResponseEntity<ApiResponse<ServiceBooking>> updateServiceBookingStatus(
+    public ResponseEntity<ApiResponse<ServiceBookingDTO>> updateServiceBookingStatus(
             @PathVariable UUID bookingId,
             @Valid @RequestBody UpdateBookingStatusRequest request,
             @AuthenticationPrincipal UserPrincipal currentUser) {
         ServiceBooking booking = bookingService.updateServiceBookingStatus(bookingId, request, currentUser.getParlourId());
-        return ResponseEntity.ok(ApiResponse.success("Service booking status updated successfully", booking));
+        ServiceBookingDTO bookingDTO = new ServiceBookingDTO(booking);
+        return ResponseEntity.ok(ApiResponse.success("Service booking status updated successfully", bookingDTO));
     }
 }
