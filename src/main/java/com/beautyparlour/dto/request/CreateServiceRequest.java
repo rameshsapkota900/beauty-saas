@@ -2,6 +2,7 @@ package com.beautyparlour.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
@@ -12,8 +13,10 @@ public class CreateServiceRequest {
     private UUID categoryId;
 
     @NotBlank(message = "Service name is required")
+    @Pattern(regexp = "^[a-zA-Z0-9\\s.-]{2,100}$", message = "Service name must be 2-100 characters and contain only letters, numbers, spaces, dots, and hyphens")
     private String name;
 
+    @Pattern(regexp = "^(https?://)?[\\w.-]+\\.[a-z]{2,}(/.*)?$|^$", message = "Image URL must be a valid URL or empty")
     private String imageUrl;
 
     @NotNull(message = "Price is required")
