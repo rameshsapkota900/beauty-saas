@@ -10,6 +10,7 @@ com\beautyparlour\repository\ParlourRepository.class
 com\beautyparlour\service\CategoryService.class
 com\beautyparlour\service\ServiceService.class
 com\beautyparlour\security\JwtTokenProvider.class
+com\beautyparlour\dto\response\ServiceBookingDTO.class
 com\beautyparlour\security\JwtAuthenticationFilter.class
 com\beautyparlour\entity\Admin.class
 com\beautyparlour\dto\request\CreateStaffRequest.class
