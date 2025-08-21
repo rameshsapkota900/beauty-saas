@@ -34,4 +34,24 @@ public interface ServiceBookingRepository extends JpaRepository<ServiceBooking, 
     
     @Query("SELECT COUNT(sb) FROM ServiceBooking sb WHERE sb.parlourId = :parlourId AND sb.status = 'COMPLETED'")
     long countCompletedBookingsByParlour(@Param("parlourId") UUID parlourId);
+    
+    // Count bookings by status for analytics
+    long countByParlourIdAndStatus(UUID parlourId, ServiceBooking.BookingStatus status);
+    
+    // Get bookings for a client within date range
+    @Query("SELECT sb FROM ServiceBooking sb WHERE sb.clientName = :clientName AND sb.phone = :phone AND sb.createdAt BETWEEN :startDate AND :endDate")
+    List<ServiceBooking> findByClientNameAndPhoneAndDateRange(@Param("clientName") String clientName,
+                                                              @Param("phone") String phone,
+                                                              @Param("startDate") LocalDateTime startDate,
+                                                              @Param("endDate") LocalDateTime endDate);
+    
+    // Get latest bookings for a client
+    @Query("SELECT sb FROM ServiceBooking sb WHERE sb.clientName = :clientName AND sb.phone = :phone ORDER BY sb.createdAt DESC")
+    List<ServiceBooking> findLatestByClientNameAndPhone(@Param("clientName") String clientName, 
+                                                        @Param("phone") String phone, 
+                                                        Pageable pageable);
+    
+    // Get revenue-related analytics
+    @Query("SELECT COUNT(sb) FROM ServiceBooking sb WHERE sb.parlourId = :parlourId AND sb.createdAt >= :date")
+    long countBookingsSince(@Param("parlourId") UUID parlourId, @Param("date") LocalDateTime date);
 }
