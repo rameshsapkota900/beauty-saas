@@ -5,6 +5,7 @@ import com.beautyparlour.dto.request.StaffAdvancePayRequest;
 import com.beautyparlour.entity.Staff;
 import com.beautyparlour.entity.StaffAdvancePay;
 import com.beautyparlour.entity.StaffSalaryLog;
+import com.beautyparlour.exception.BusinessRuleViolationException;
 import com.beautyparlour.exception.ResourceNotFoundException;
 import com.beautyparlour.repository.StaffAdvancePayRepository;
 import com.beautyparlour.repository.StaffRepository;
@@ -52,6 +53,22 @@ public class StaffService {
     public StaffAdvancePay recordAdvancePay(UUID staffId, StaffAdvancePayRequest request, UUID parlourId) {
         Staff staff = staffRepository.findByIdAndParlourId(staffId, parlourId)
                 .orElseThrow(() -> new ResourceNotFoundException("Staff not found"));
+
+        // Business rule: Advance cannot exceed 80% of base salary
+        BigDecimal maxAdvanceAllowed = staff.getBaseSalary().multiply(new BigDecimal("0.80"));
+        BigDecimal currentTotalAdvance = staffAdvancePayRepository.getTotalAdvanceByStaffId(staffId);
+        BigDecimal newTotalAdvance = currentTotalAdvance.add(request.getAmount());
+
+        if (newTotalAdvance.compareTo(maxAdvanceAllowed) > 0) {
+            throw new BusinessRuleViolationException(
+                String.format("Total advance cannot exceed 80%% of base salary. " +
+                    "Current advance: %s, Requested: %s, Maximum allowed: %s", 
+                    currentTotalAdvance, request.getAmount(), maxAdvanceAllowed));
+        }
+
+        if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessRuleViolationException("Advance amount must be positive");
+        }
 
         StaffAdvancePay advancePay = new StaffAdvancePay(staffId, request.getAmount());
         return staffAdvancePayRepository.save(advancePay);

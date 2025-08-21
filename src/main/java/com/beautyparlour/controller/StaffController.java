@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +29,7 @@ public class StaffController {
     private StaffService staffService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Add new staff")
     public ResponseEntity<ApiResponse<Staff>> createStaff(
             @Valid @RequestBody CreateStaffRequest request,
@@ -37,6 +39,7 @@ public class StaffController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all staff")
     public ResponseEntity<ApiResponse<List<Staff>>> getAllStaff(
             @AuthenticationPrincipal UserPrincipal currentUser) {
@@ -45,6 +48,7 @@ public class StaffController {
     }
 
     @DeleteMapping("/{staffId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete staff")
     public ResponseEntity<ApiResponse<Void>> deleteStaff(
             @PathVariable UUID staffId,
