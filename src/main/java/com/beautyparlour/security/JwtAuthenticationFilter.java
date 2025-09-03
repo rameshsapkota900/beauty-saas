@@ -26,23 +26,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
+        // Skip the filter for the login endpoint
+        if ("/auth/login".equals(request.getRequestURI())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             String jwt = getJwtFromRequest(request);
 
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                 String userType = tokenProvider.getUserTypeFromToken(jwt);
-                
+
                 if ("SUPERADMIN".equals(userType)) {
                     String username = tokenProvider.getUserIdFromToken(jwt);
                     UserPrincipal userPrincipal = UserPrincipal.createSuperAdmin(username);
-                    UsernamePasswordAuthenticationToken authentication = 
+                    UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } else {
                     String userId = tokenProvider.getUserIdFromToken(jwt);
                     UserPrincipal userDetails = customUserDetailsService.loadUserById(userId);
-                    UsernamePasswordAuthenticationToken authentication = 
+                    UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);

@@ -67,7 +67,7 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/auth/*").permitAll()
                         .requestMatchers("/superadmin/secret-login").permitAll()
                         .requestMatchers("/book-course", "/book-service", "/cancel-course/**", "/cancel-service/**", "/my-course-bookings", "/my-service-bookings").permitAll()
                         .requestMatchers("/courses", "/services", "/categories", "/success-students", "/certificates").permitAll()
